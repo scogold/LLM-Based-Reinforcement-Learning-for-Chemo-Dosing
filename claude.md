@@ -50,6 +50,30 @@ Conventions:
 - `train.py` writes a copy of the resolved config and seed into each run directory under `runs/`.
 - Only final paper graphs go in `figures/`; everything else a run produces stays in `runs/`.
 
+## Subagents
+
+Project subagents are defined in `.claude/agents/`:
+
+| Agent | Model | Use it for |
+| --- | --- | --- |
+| `researcher` | Sonnet | Literature and docs questions behind design decisions; citations for related work. Read-only plus web. |
+| `test-writer` | Sonnet | Writing pytest tests for a module once its interface exists, from the specified behaviour rather than the implementation. Edits only `tests/` and `pytest.ini`. |
+| `test-runner` | Haiku | Running pytest after changes and before pushing to `main`. Reports failures, never fixes. |
+| `rl-reviewer` | Opus | Reviewing PPO, policy, action, env and evaluation code for silent correctness bugs, especially before long training runs. Read-only. |
+| `experiment-analyst` | Sonnet | Comparing runs in `runs/` across seeds and producing graphs through `scripts/plot.py`. |
+| `basic-debugger` | Haiku | First stop for every bug. Fixes what it can and verifies; otherwise escalates. |
+| `super-debugger` | Opus | Only after `basic-debugger` escalates: NaNs, PPO not learning or diverging, out-of-memory, nondeterminism, and anything else it couldn't fix. May run short reproduction runs in `runs/debug-*/`; proposes rather than applies changes to the experimental design. |
+
+Debugging always goes through the two debuggers in order:
+
+1. Send every bug to `basic-debugger` first, including ones that look hard. Don't go straight to `super-debugger`.
+2. If `basic-debugger` reports that it fixed and verified the bug, stop there.
+3. If its report ends with an escalation (it could not find or fix the cause), immediately call `super-debugger` and pass it the original problem plus `basic-debugger`'s full report, including what it changed and what it ruled out.
+
+Subagents cannot call each other, so the main session does this handoff.
+
+The paper is written by hand; there is no writing agent. Use subagents when their output can be summarised back, such as a test report, a review or a cited answer. Build new features in the main session; the debuggers only fix existing code.
+
 ## Models
 
 Candidates, all loaded with Hugging Face Transformers and PEFT (LoRA):
@@ -58,11 +82,11 @@ Candidates, all loaded with Hugging Face Transformers and PEFT (LoRA):
 - MedGemma 4B
 - DeepSeek R1-Distill 7B
 
-Training more than one model is optional and happens only if time allows. Code should take the model name from config so that switching models needs no code change.
+Code should take the model name from config so that switching models needs no code change.
 
 ## Hardware
 
-Training runs on a single local GPU with 16 GB of VRAM.
+Training targets a single GPU with 16 GB of VRAM.
 
 - Load the 7B and 8B models in 4-bit (bitsandbytes) with LoRA adapters; full-precision loading will not fit alongside PPO gradients.
 - Keep rollout and minibatch sizes small and use gradient accumulation instead of large batches.
@@ -78,9 +102,9 @@ Every comparison must use the same env configuration, seeds, and evaluation epis
 ## Tooling
 
 - Python virtual environment with `python -m venv` and pip; dependencies in `requirements.txt`. No conda, uv, or poetry.
-- Tests with `pytest`.
+- Tests with `pytest`. Default tests run on CPU in seconds using a stub policy or a tiny random Hugging Face model. Tests that need a real 4-8B model are marked `@pytest.mark.gpu` and run only where a suitable GPU is available. Run the fast suite with `pytest -m "not gpu"`.
 - Metrics logged with TensorBoard. Run outputs (event files, checkpoints, adapter weights) are never committed.
-- The development machine is Windows 11 with PowerShell. Use paths and commands that work there, and avoid dependencies that are Linux-only.
+- Code must run on Windows as well as Linux. Use `pathlib` for paths and avoid Linux-only dependencies.
 
 Commands (update this section as the repo takes shape):
 
