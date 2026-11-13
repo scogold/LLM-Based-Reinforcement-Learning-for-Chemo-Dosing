@@ -59,6 +59,7 @@ Project subagents are defined in `.claude/agents/`:
 | `researcher` | Sonnet | Literature and docs questions behind design decisions; citations for related work. Read-only plus web. |
 | `test-writer` | Sonnet | Writing pytest tests for a module once its interface exists, from the specified behaviour rather than the implementation. Edits only `tests/` and `pytest.ini`. |
 | `test-runner` | Haiku | Running pytest after changes and before pushing to `main`. Reports failures, never fixes. |
+| `code-reviewer` | Sonnet | Run after each piece of code is written in the main session. Simplifies it in place: removes unnecessary safeguards, over-abstraction and noise without changing behaviour, then runs the fast tests. Asks about anything that might change behaviour. |
 | `rl-reviewer` | Opus | Reviewing PPO, policy, action, env and evaluation code for silent correctness bugs, especially before long training runs. Read-only. |
 | `experiment-analyst` | Sonnet | Comparing runs in `runs/` across seeds and producing graphs through `scripts/plot.py`. |
 | `basic-debugger` | Haiku | First stop for every bug. Fixes what it can and verifies; otherwise escalates. |
@@ -71,6 +72,8 @@ Debugging always goes through the two debuggers in order:
 3. If its report ends with an escalation (it could not find or fix the cause), immediately call `super-debugger` and pass it the original problem plus `basic-debugger`'s full report, including what it changed and what it ruled out.
 
 Subagents cannot call each other, so the main session does this handoff.
+
+After writing each piece of code in the main session, call `code-reviewer` on it before moving on. Pass any questions in its report on to the user.
 
 The paper is written by hand; there is no writing agent. Use subagents when their output can be summarised back, such as a test report, a review or a cited answer. Build new features in the main session; the debuggers only fix existing code.
 
