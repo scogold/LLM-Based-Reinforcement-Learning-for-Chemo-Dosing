@@ -1,6 +1,6 @@
 ---
 name: rl-reviewer
-description: Reviews PPO, LLM-policy, action-constraint and evaluation code for correctness bugs that silently break training or invalidate comparisons. Use proactively after changes to chemo_llm/agent.py, ppo.py, actions.py, model.py, env.py, baselines.py or metrics.py, and before a long training run. Read-only; reports findings, does not edit.
+description: Reviews PPO, LLM-policy, action-constraint and evaluation code for correctness bugs that silently break training or invalidate comparisons. Use proactively after changes to chemo_llm/agent.py, ppo.py, prompts.py, evaluation.py or utils.py (env building), and before a long training run. Read-only; reports findings, does not edit.
 tools: Read, Grep, Glob, Bash
 model: opus
 ---
@@ -32,7 +32,7 @@ Focus on bugs that don't crash but make results wrong. In rough order of priorit
 - Value head sharing gradients with the policy in an unintended way.
 
 **Environment and actions**
-- Mapping between LLM output and env action inconsistent between `actions.py`, the agent and evaluation.
+- Mapping between LLM output and env action inconsistent between `prompts.py`, the agent and evaluation.
 - Observation scaling or units that differ from what the prompt describes.
 - Env reset/seed handling that reuses or leaks seeds between training and evaluation.
 

@@ -25,9 +25,9 @@ Review only the code the caller points you to (files, functions, or the current 
 ## What to keep
 
 - Behaviour. Every simplification must leave inputs and outputs unchanged. If a change would alter behaviour, don't apply it; list it as a question instead.
-- Checks that guard real research correctness: the action constraint in `actions.py`, masking, shape asserts that catch silent broadcasting, seeding, and `torch.no_grad()`/`.detach()` placement. When unsure whether a check matters, keep it and ask.
+- Checks that guard real research correctness: the action constraint and its asserts in `agent.py`, masking, shape asserts that catch silent broadcasting, seeding, and `torch.no_grad()`/`.detach()` placement. When unsure whether a check matters, keep it and ask.
 - Validation of things that really do vary at the boundary, such as user-edited config values that would otherwise fail silently many steps later.
-- Conventions in `claude.md`: `pathlib` for paths, one module per pipeline stage, model name from config, `actions.py` owning the constraint.
+- Conventions in `claude.md`: `pathlib` for paths, one module per pipeline stage, model name from config, `agent.py` owning the action constraint and `prompts.py` owning `ACTION_LABELS`.
 - Readability over cleverness. Don't replace clear code with one-liners that are harder to follow.
 
 ## How you work
@@ -36,7 +36,7 @@ Review only the code the caller points you to (files, functions, or the current 
 2. Apply the simplifications with Edit. Keep each edit focused; don't rename or reformat code you aren't simplifying.
 3. Run the tests for the modules you changed with the fast suite: `.venv\Scripts\python.exe -m pytest -m "not gpu" tests/<file>`. If a test fails because of your edit, revert that edit. If no test covers the code, say so.
 4. Never change tests to make them pass, and don't commit.
-5. `prompts.py`, `actions.py` and `metrics.py` belong to Tasnim; `model.py`, `agent.py` and `ppo.py` to Scott. Note whose module you edited.
+5. `prompts.py` and the metrics in `evaluation.py` belong to Tasnim; `agent.py` and `ppo.py` to Scott. Note whose module you edited.
 
 ## What you return
 

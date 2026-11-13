@@ -1,0 +1,35 @@
+# Python 3.12. Install in two steps:
+#   pip install -r requirements.txt
+#   pip install --no-deps --ignore-requires-python simglucose==0.2.3 "DTRGym @ git+https://github.com/GilesLuo/DTRGym.git@1f4fed49769b371c01d90959d2e012154068b3be"
+#
+# DTRGym is not on PyPI, and both it and simglucose pin Python 3.10 and 2023-era versions of
+# everything, which won't install on 3.12. The second step installs them without those pins;
+# the packages they actually import are listed below instead.
+#
+# CUDA 13.0 build of torch, needed for the RTX 5080 (Blackwell). On Linux the same index works.
+--extra-index-url https://download.pytorch.org/whl/cu130
+torch==2.14.1
+
+# LLM + LoRA + 4-bit
+transformers==5.22.2
+peft==0.21.2
+bitsandbytes==0.50.2
+accelerate==1.15.0
+
+# Environment (AhnChemoEnv) and what `import DTRGym` pulls in
+numpy==1.26.4          # DTRGym was written for numpy 1.25; AhnChemoEnv breaks on numpy 2
+gymnasium==0.29.1
+gym==0.26.2            # simglucose imports old gym
+setuptools==80.10.2    # simglucose imports pkg_resources, removed in setuptools 81
+scipy==1.17.1
+pandas==3.0.6
+numba==0.61.2          # newer numba DLLs are blocked by Windows Smart App Control; 0.61.2 loads
+tianshou==0.5.0        # imported by DTRGym, not used by our LLM agent
+h5py==3.16.0
+tqdm==4.70.1
+matplotlib==3.11.2
+
+# Config, logging, tests
+pyyaml==6.0.3
+tensorboard==2.21.0
+pytest==9.2.0

@@ -24,15 +24,16 @@ Research project by Scott and Tasnim. We fine-tune a small open-weight LLM with 
 │   ├── medgemma_4b.yaml
 │   └── deepseek_r1_7b.yaml
 ├── chemo_llm/                 # the package
-│   ├── env.py                 # builds AhnChemoEnv from DTRGym, any wrappers
-│   ├── prompts.py             # observation -> prompt text, prompt variants   (Tasnim)
-│   ├── actions.py             # constrained output <-> dose action            (Tasnim)
-│   ├── model.py               # load model + tokenizer, 4-bit, attach LoRA    (Scott)
-│   ├── agent.py               # LLM policy: prompt -> action, log-prob, value (Scott)
+│   ├── prompts.py             # observation -> prompt text, prompt variants,
+│   │                          #   ACTION_LABELS (answer options)              (Tasnim)
+│   ├── agent.py               # load model (4-bit + LoRA); LLM policy:
+│   │                          #   action constraint, label -> dose,
+│   │                          #   prompt -> action, log-prob, value           (Scott)
 │   ├── ppo.py                 # rollout buffer, GAE, PPO update               (Scott)
-│   ├── baselines.py           # zero-shot LLM and conventional RL agents
-│   ├── metrics.py             # evaluation metrics                            (Tasnim)
-│   └── utils.py               # seeding, config loading, TensorBoard writer
+│   ├── evaluation.py          # metrics (Tasnim); zero-shot LLM and
+│   │                          #   conventional RL baselines
+│   └── utils.py               # builds AhnChemoEnv + wrappers, seeding,
+│                              #   config loading, TensorBoard writer
 ├── scripts/
 │   ├── train.py               # python scripts/train.py --config configs/qwen3_8b.yaml
 │   ├── evaluate.py            # run a checkpoint or baseline over fixed eval seeds
@@ -44,8 +45,8 @@ Research project by Scott and Tasnim. We fine-tune a small open-weight LLM with 
 
 Conventions:
 
-- Keep the package flat, one module per pipeline stage. Split a module only when it gets unwieldy.
-- `actions.py` owns everything about the action constraint. `agent.py` and `ppo.py` get valid actions and log-probs from it and must not depend on how the constraint is implemented.
+- Keep the package flat and small: few modules, each covering a whole pipeline stage. Don't add a new module for something a few dozen lines long; put it in the module it belongs with. Split a module only when it gets unwieldy.
+- `agent.py` owns the action constraint: it keeps only the next-token logits of the action labels, and maps each label to a dose from config. `prompts.py` owns only the text, including `ACTION_LABELS`, the answer options the prompt offers; it is the single place those labels are defined. `ppo.py` works with action indices and log-probs and must not depend on how the constraint is implemented.
 - Prompt variants live in `prompts.py` and are selected by config, so a prompt experiment is a config change, not a code change.
 - `train.py` writes a copy of the resolved config and seed into each run directory under `runs/`.
 - Only final paper graphs go in `figures/`; everything else a run produces stays in `runs/`.
@@ -115,6 +116,7 @@ Commands (update this section as the repo takes shape):
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+pip install --no-deps --ignore-requires-python simglucose==0.2.3 "DTRGym @ git+https://github.com/GilesLuo/DTRGym.git@1f4fed49769b371c01d90959d2e012154068b3be"
 pytest
 tensorboard --logdir <run directory>
 ```

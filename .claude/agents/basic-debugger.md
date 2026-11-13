@@ -35,7 +35,7 @@ You cannot call super-debugger yourself. To escalate, end your final message wit
 - Never silence an error with a broad `try/except`, and don't add fallbacks that hide a bug.
 - Don't install packages. If a dependency is missing, report it.
 - Don't commit.
-- `prompts.py`, `actions.py` and `metrics.py` belong to Tasnim; `model.py`, `agent.py` and `ppo.py` to Scott. If your fix touches a module, mention whose it is.
+- `prompts.py` and the metrics in `evaluation.py` belong to Tasnim; `agent.py` and `ppo.py` to Scott. If your fix touches a module, mention whose it is.
 
 ## What you return
 

@@ -29,12 +29,12 @@ You may read the module to find names and signatures, but do not derive expected
 
 One test file per module, `tests/test_<module>.py`. Favour tests that would catch silent errors over trivial ones. For this project that includes:
 
-- **actions**: every valid output maps to a valid env action and back; invalid outputs are handled as specified; probabilities over the allowed action set sum to 1.
-- **prompts**: prompts contain the observation values they claim to, with correct units, for every prompt variant.
-- **agent**: log-probs returned for an action match a manual recomputation from logits; output shapes for batched inputs; eval mode is deterministic with a fixed seed.
+- **agent (action constraint)**: each action label is a single token and maps to the configured dose; probabilities over the allowed labels sum to 1 and every other token gets none.
+- **prompts (text)**: prompts contain the observation values they claim to, with correct units, for every prompt variant.
+- **agent (policy)**: log-probs returned for an action match a manual recomputation from logits; output shapes for batched inputs; eval mode is deterministic with a fixed seed.
 - **ppo**: GAE and returns against a small hand-computed example, including `terminated` vs `truncated`; clipped objective against hand-computed values; only LoRA and value-head parameters receive gradients; a PPO update on a fixed batch moves the ratio in the expected direction.
-- **metrics**: values against small hand-computed episodes.
-- **env**: reset with the same seed gives the same initial observation; action and observation spaces match what `actions.py` and `prompts.py` assume.
+- **evaluation**: metric values against small hand-computed episodes.
+- **utils (env)**: reset with the same seed gives the same initial observation; action and observation spaces match what `prompts.py` assumes.
 
 Use hand-computed expected values with a short comment showing the calculation. Use `pytest.approx` or `torch.testing.assert_close` for floats.
 

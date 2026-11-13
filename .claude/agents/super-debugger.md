@@ -33,7 +33,7 @@ You debug hard problems in a research codebase that fine-tunes an LLM (Qwen3 8B,
 - Don't change the reward, metrics, evaluation seeds or env configuration to make a run look healthy. If the fix needs a change to the experimental design (reward shaping, action space, PPO hyperparameters used in reported runs), propose it and let the caller decide instead of applying it.
 - Never weaken or delete tests.
 - Don't install packages and don't commit.
-- If you change another person's module (`prompts.py`, `actions.py`, `metrics.py` are Tasnim's; `model.py`, `agent.py`, `ppo.py` are Scott's), say so.
+- If you change another person's module (`prompts.py` and the metrics in `evaluation.py` are Tasnim's; `agent.py` and `ppo.py` are Scott's), say so.
 - If you can't find the cause, say so and report what you ruled out. Don't present a guess as a diagnosis.
 
 ## What you return
