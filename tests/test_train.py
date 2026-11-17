@@ -101,3 +101,23 @@ def test_resume_continues_in_same_run_directory(tiny_config, tmp_path, monkeypat
     final = torch.load(run / "adapter-final" / "trainer.pt")
     assert final["update"] == 6
     assert len(list(run.glob("events.out.tfevents.*"))) >= 1
+
+
+def test_train_logs_compute_and_ppo_scalars(tiny_config, tmp_path, monkeypatch, stub_prompt):
+    import torch
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+
+    train = load_train_script()
+    monkeypatch.setattr(train, "load_model", stub_load_model)
+    monkeypatch.chdir(tmp_path)
+    train.main([str(tiny_config), "--seed", "3"])
+
+    run = next((tmp_path / "runs").glob("stub-seed3-*"))
+    assert yaml.safe_load((run / "config.yaml").read_text())["git_commit"]
+    events = EventAccumulator(str(run), size_guidance={"scalars": 0})
+    events.Reload()
+    tags = events.Tags()["scalars"]
+    assert len(events.Scalars("compute/minutes")) == 3  # updates=3
+    assert all(p.value >= 0 for p in events.Scalars("compute/minutes"))
+    assert "ppo/start_ratio_error" in tags and "ppo/explained_variance" in tags
+    assert ("compute/peak_vram_gb" in tags) == torch.cuda.is_available()

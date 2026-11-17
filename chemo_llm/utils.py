@@ -23,6 +23,7 @@ Used by:
 """
 
 import random
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -86,11 +87,26 @@ def make_env(cfg, seed):
     return gym.wrappers.RecordEpisodeStatistics(env)
 
 
+def git_commit():
+    """The repo's current commit hash, ending in "-dirty" if there are uncommitted changes,
+    so each run records exactly which code produced it. "unknown" if git isn't available."""
+    repo = Path(__file__).resolve().parent.parent
+    try:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True,
+                                text=True, check=True).stdout.strip()
+        changes = subprocess.run(["git", "status", "--porcelain"], cwd=repo, capture_output=True,
+                                 text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+    return commit + ("-dirty" if changes else "")
+
+
 def start_run(cfg, seed):
-    """Create runs/<config>-seed<seed>-<time>/, save the resolved config and seed there,
-    and return (run_dir, TensorBoard writer)."""
+    """Create runs/<config>-seed<seed>-<time>/, save the resolved config, seed and git commit
+    there, and return (run_dir, TensorBoard writer)."""
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     run_dir = Path("runs") / f"{cfg['config_name']}-seed{seed}-{stamp}"
     run_dir.mkdir(parents=True)
-    (run_dir / "config.yaml").write_text(yaml.safe_dump({**cfg, "seed": seed}, sort_keys=False))
+    record = {**cfg, "seed": seed, "git_commit": git_commit()}
+    (run_dir / "config.yaml").write_text(yaml.safe_dump(record, sort_keys=False))
     return run_dir, SummaryWriter(run_dir)

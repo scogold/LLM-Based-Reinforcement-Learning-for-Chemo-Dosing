@@ -5,10 +5,14 @@ import gymnasium as gym
 import numpy as np
 import pytest
 import torch
+import re
+import subprocess
+
 import yaml
 
 from chemo_llm import prompts
-from chemo_llm.utils import ScalarDose, load_config, make_env, set_seed, start_run
+from chemo_llm import utils
+from chemo_llm.utils import ScalarDose, git_commit, load_config, make_env, set_seed, start_run
 
 CONFIG_DIR = Path(__file__).parent.parent / "configs"
 # setting3 has observation noise, so different seeds give different patients.
@@ -141,5 +145,40 @@ def test_start_run_writes_config_with_seed(tmp_path, monkeypatch):
     assert run_dir.name.startswith("mymodel-seed4-")
     saved = yaml.safe_load((run_dir / "config.yaml").read_text())
     assert saved["seed"] == 4
+    assert saved["git_commit"] == git_commit()
     assert saved["ppo"] == {"lr": 1e-5}
     assert not (tmp_path / "chemo_llm").exists()
+
+
+# ---- git_commit ----
+
+def _fake_git(head, porcelain):
+    def run(cmd, **kwargs):
+        out = head if cmd[1] == "rev-parse" else porcelain
+        return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
+    return run
+
+
+def test_git_commit_clean_is_the_head_hash(monkeypatch):
+    head = "a" * 40
+    monkeypatch.setattr(utils.subprocess, "run", _fake_git(head, ""))
+    assert git_commit() == head
+
+
+def test_git_commit_appends_dirty_when_status_is_not_empty(monkeypatch):
+    head = "b" * 40
+    monkeypatch.setattr(utils.subprocess, "run", _fake_git(head, " M chemo_llm/utils.py"))
+    assert git_commit() == head + "-dirty"
+
+
+@pytest.mark.parametrize("error", [OSError("no git"), subprocess.CalledProcessError(128, "git")])
+def test_git_commit_is_unknown_when_git_fails(monkeypatch, error):
+    def run(cmd, **kwargs):
+        raise error
+    monkeypatch.setattr(utils.subprocess, "run", run)
+    assert git_commit() == "unknown"
+
+
+def test_git_commit_real_repo_format():
+    value = git_commit()
+    assert value == "unknown" or re.fullmatch(r"[0-9a-f]{40}(-dirty)?", value)

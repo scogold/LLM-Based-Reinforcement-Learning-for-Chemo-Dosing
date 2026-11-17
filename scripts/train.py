@@ -3,8 +3,9 @@
     python scripts/train.py configs/qwen3_8b.yaml --seed 0
 
 Creates runs/<config>-seed<seed>-<time>/ containing:
-    config.yaml          the resolved config and seed
-    events.out.tfevents  TensorBoard logs (tensorboard --logdir runs)
+    config.yaml          the resolved config, seed and git commit
+    events.out.tfevents  TensorBoard logs (tensorboard --logdir runs); plot the learning curve
+                         with scripts/plot.py --runs <run directory>
     adapter-0020/ ...    checkpoints every train.save_every updates
     adapter-final/       the final checkpoint
 Each checkpoint holds the LoRA adapter and value head (what evaluate.py loads) plus
@@ -79,6 +80,7 @@ def main(argv=None):
     start_time = time.time()
     obs, _ = env.reset(seed=seed)
     for update in range(first_update, train_cfg["updates"] + 1):
+        update_start = time.time()
         buffer, obs, episodes = collect_rollout(env, agent, obs, ppo_cfg)
         stats = ppo_update(agent, optimizer, buffer, ppo_cfg)
 
@@ -93,6 +95,11 @@ def main(argv=None):
             writer.add_scalar("episode/return", episode["return"], step)
             writer.add_scalar("episode/length", episode["length"], step)
             writer.add_scalar("episode/died", float(episode["died"]), step)
+        # Compute cost for the paper: total training time is the sum of compute/minutes
+        # (this also works across a --resume).
+        writer.add_scalar("compute/minutes", (time.time() - update_start) / 60, step)
+        if torch.cuda.is_available():
+            writer.add_scalar("compute/peak_vram_gb", torch.cuda.max_memory_reserved() / 2**30, step)
 
         minutes_per_update = (time.time() - start_time) / 60 / (update - first_update + 1)
         hours_left = minutes_per_update * (train_cfg["updates"] - update) / 60
