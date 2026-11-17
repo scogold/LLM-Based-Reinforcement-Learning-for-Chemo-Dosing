@@ -1,0 +1,26 @@
+# Settings shared by every model. utils.load_config reads this file first, then the model
+# config (e.g. configs/qwen3_8b.yaml) overrides it key by key. Keep env, doses and PPO
+# settings here so every model and baseline is compared under the same conditions.
+
+env:
+  id: AhnChemoEnv-continuous-setting1   # setting1 has no noise: every seed is the same patient.
+                                        # setting2 varies drug response; 3-5 add state and
+                                        # observation noise.
+  max_t: 600                            # steps per episode; one step is 6 hours, so 150 days
+
+# Dose sent to the env for each answer label A-E, in order.
+# Must equal prompts.DOSE_LEVELS, because the prompt tells the model these numbers.
+doses: [0.0, 0.25, 0.5, 0.75, 1.0]
+
+ppo:
+  rollout_steps: 64        # env steps collected per update
+  epochs: 4                # passes over each rollout
+  minibatch_size: 16       # samples per optimizer step
+  micro_batch_size: 2      # samples per forward pass; gradients accumulate up to minibatch_size
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  vf_coef: 0.5
+  ent_coef: 0.01
+  max_grad_norm: 1.0
+  lr: 1.0e-5               # used by scripts/train.py to build the optimizer
