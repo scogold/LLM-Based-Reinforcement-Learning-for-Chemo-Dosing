@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from conftest import StubModel, StubTokenizer
+from conftest import stub_load_model
 
 ROOT = Path(__file__).parent.parent
 
@@ -32,7 +32,7 @@ def tiny_config(tmp_path):
 
 def test_train_writes_run_directory(tiny_config, tmp_path, monkeypatch, stub_prompt):
     train = load_train_script()
-    monkeypatch.setattr(train, "load_model", lambda cfg: (StubModel(), StubTokenizer()))
+    monkeypatch.setattr(train, "load_model", stub_load_model)
     monkeypatch.chdir(tmp_path)
 
     train.main([str(tiny_config), "--seed", "3"])
@@ -46,3 +46,58 @@ def test_train_writes_run_directory(tiny_config, tmp_path, monkeypatch, stub_pro
     assert (run / "adapter-0002" / "value_head.pt").exists()  # save_every=2 -> update 2 only
     assert not (run / "adapter-0001").exists() and not (run / "adapter-0003").exists()
     assert (run / "adapter-final" / "value_head.pt").exists()
+
+
+def test_train_builds_two_param_groups_with_configured_lrs(tiny_config, tmp_path, monkeypatch, stub_prompt):
+    import torch
+
+    train = load_train_script()
+    monkeypatch.setattr(train, "load_model", stub_load_model)
+    monkeypatch.chdir(tmp_path)
+    captured = []
+    real_adamw = torch.optim.AdamW
+
+    def spy(*args, **kwargs):
+        optimizer = real_adamw(*args, **kwargs)
+        captured.append(optimizer)
+        return optimizer
+
+    monkeypatch.setattr(torch.optim, "AdamW", spy)
+    train.main([str(tiny_config), "--seed", "3"])
+
+    cfg = yaml.safe_load((ROOT / "configs" / "base.yaml").read_text())["ppo"]
+    assert len(captured) == 1
+    groups = captured[0].param_groups
+    assert [g["lr"] for g in groups] == [cfg["lr"], cfg["value_head_lr"]]
+    assert cfg["lr"] != cfg["value_head_lr"]
+    assert all(len(g["params"]) > 0 for g in groups)
+
+
+def test_resume_continues_in_same_run_directory(tiny_config, tmp_path, monkeypatch, stub_prompt):
+    import torch
+
+    train = load_train_script()
+    monkeypatch.setattr(train, "load_model", stub_load_model)
+    monkeypatch.chdir(tmp_path)
+
+    train.main([str(tiny_config), "--seed", "3"])  # updates=3, save_every=2 -> adapter-0002
+    run = next((tmp_path / "runs").glob("stub-seed3-*"))
+    checkpoint = run / "adapter-0002"
+    state = torch.load(checkpoint / "trainer.pt")
+    assert state["update"] == 2 and "optimizer" in state
+    assert torch.load(run / "adapter-final" / "trainer.pt")["update"] == 3
+
+    # Same config, but train for 6 updates in total
+    base = yaml.safe_load((tiny_config.parent / "base.yaml").read_text())
+    base["train"]["updates"] = 6
+    (tiny_config.parent / "base.yaml").write_text(yaml.safe_dump(base))
+
+    train.main([str(tiny_config), "--seed", "3", "--resume", str(checkpoint)])
+
+    assert len(list((tmp_path / "runs").iterdir())) == 1  # no new run directory
+    assert (run / "adapter-0004" / "trainer.pt").exists()
+    assert (run / "adapter-0006" / "trainer.pt").exists()
+    assert not (run / "adapter-0003").exists()
+    final = torch.load(run / "adapter-final" / "trainer.pt")
+    assert final["update"] == 6
+    assert len(list(run.glob("events.out.tfevents.*"))) >= 1

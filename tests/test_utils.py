@@ -51,7 +51,8 @@ def test_real_configs_have_what_the_code_reads(name):
     assert len(cfg["doses"]) == len(prompts.ACTION_LABELS)
     assert cfg["doses"] == list(prompts.DOSE_LEVELS)
     for key in ["rollout_steps", "epochs", "minibatch_size", "micro_batch_size", "gamma",
-                "gae_lambda", "clip_range", "vf_coef", "ent_coef", "max_grad_norm", "lr"]:
+                "gae_lambda", "clip_range", "vf_coef", "ent_coef", "max_grad_norm", "lr",
+                "reward_scale", "value_head_lr"]:
         assert key in cfg["ppo"]
     for key in ["prompt_variant", "updates", "save_every"]:
         assert key in cfg["train"]

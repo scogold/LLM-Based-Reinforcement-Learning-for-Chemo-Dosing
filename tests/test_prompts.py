@@ -87,3 +87,24 @@ def test_build_prompt_closes_open_think_tag():
     out = P.build_prompt([0.8, 0.5, 0.2], "base", FakeTok(tail="<think>\n"))
     assert out.endswith("</think>\n\n")
     assert out.count("<think>") == 1
+
+@pytest.mark.parametrize("value, expected", [
+    (0, "0.000"),
+    (0.2, "0.200"),
+    (0.005, "0.00500"),        # 3 significant digits -> 5 decimals
+    (0.0000123, "0.0000123"),
+    (1e-12, "0.00000000"),     # capped at 8 decimals
+    (float("nan"), "unavailable"),
+    (None, "unavailable"),
+])
+def test_fmt_small_and_missing_values(value, expected):
+    assert P._fmt(value) == expected
+
+
+@pytest.mark.parametrize("value, expected", [(0.1, "0.100"), (0.8, "0.800"), (0.12345, "0.123"), (1.0, "1.000")])
+def test_fmt_values_from_point_one_up_use_three_decimals(value, expected):
+    assert P._fmt(value) == expected
+
+
+def test_fmt_never_uses_scientific_notation():
+    assert "e" not in P._fmt(3e-7).lower()

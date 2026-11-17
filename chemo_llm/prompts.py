@@ -81,7 +81,16 @@ def _is_missing(x) -> bool:
 
 
 def _fmt(x) -> str:
-    return "unavailable" if _is_missing(x) else f"{float(x):.3f}"
+    """At least 3 decimals and at least 3 significant digits, without scientific notation,
+    so a tiny but regrowing tumor shows as 0.0000123 rather than 0.000. Capped at 8 decimals
+    to keep prompts short; anything below 1e-8 prints as 0.00000000."""
+    if _is_missing(x):
+        return "unavailable"
+    x = float(x)
+    if x == 0:
+        return "0.000"
+    decimals = min(8, max(3, 2 - math.floor(math.log10(abs(x)))))
+    return f"{x:.{decimals}f}"
 
 
 def _trend(prev, cur, tol: float = 0.02) -> str:

@@ -64,7 +64,7 @@ class ToyEnv:
     def step(self, action):
         self.t += 1
         end = self.t == self.length
-        info = {"episode": {"r": np.array([float(self.t)])}} if end else {}
+        info = {"episode": {"r": np.array([float(self.t)]), "l": np.array([self.t])}} if end else {}
         return self.t, 1.0, end and not self.truncate, end and self.truncate, info
 
 
@@ -78,33 +78,102 @@ class FakeAgent:
         return 10.0
 
 
-CFG = {"rollout_steps": 3, "gamma": 0.9, "gae_lambda": 0.8}
+CFG = {"rollout_steps": 3, "gamma": 0.9, "gae_lambda": 0.8, "reward_scale": 1.0}
 
 
 def test_truncation_adds_discounted_bootstrap_to_reward():
-    buffer, next_obs, returns = collect_rollout(ToyEnv(2, truncate=True), FakeAgent(), 0, CFG)
-    # step 2 is truncated: reward = 1 + 0.9 * V(next) = 1 + 9 = 10
-    assert buffer.rewards == [1.0, 10.0, 1.0]
+    buffer, next_obs, episodes = collect_rollout(ToyEnv(2, truncate=True), FakeAgent(), 0, CFG)
+    # step 2 is truncated: env reward stays 1; the bootstrap 0.9 * V(next) = 9 is stored apart
+    assert buffer.rewards == [1.0, 1.0, 1.0]
+    assert buffer.bootstraps == [0.0, 9.0, 0.0]
     assert buffer.dones == [0.0, 1.0, 0.0]
-    assert returns == [2.0]
+    assert [e["return"] for e in episodes] == [2.0]
     assert next_obs == 1  # a new episode started after the cut, one step into it
 
 
+def test_episode_died_is_true_on_termination_and_false_on_truncation():
+    _, _, dead = collect_rollout(ToyEnv(2, truncate=False), FakeAgent(), 0, CFG)
+    _, _, cut = collect_rollout(ToyEnv(2, truncate=True), FakeAgent(), 0, CFG)
+    assert dead == [{"return": 2.0, "length": 2, "died": True}]
+    assert cut == [{"return": 2.0, "length": 2, "died": False}]
+
+
+def test_episode_length_is_reported_for_each_finished_episode():
+    # 3 steps, episode length 1 -> three episodes of length 1
+    _, _, episodes = collect_rollout(ToyEnv(1, truncate=False), FakeAgent(), 0, CFG)
+    assert [e["length"] for e in episodes] == [1, 1, 1]
+
+
 def test_termination_does_not_bootstrap():
-    buffer, _, returns = collect_rollout(ToyEnv(2, truncate=False), FakeAgent(), 0, CFG)
+    buffer, _, episodes = collect_rollout(ToyEnv(2, truncate=False), FakeAgent(), 0, CFG)
     assert buffer.rewards == [1.0, 1.0, 1.0]
     assert buffer.dones == [0.0, 1.0, 0.0]
-    assert returns == [2.0]
+    assert [e["return"] for e in episodes] == [2.0]
 
 
 def test_rollout_records_transitions():
-    buffer, next_obs, returns = collect_rollout(ToyEnv(100, truncate=False), FakeAgent(), 0, CFG)
+    buffer, next_obs, episodes = collect_rollout(ToyEnv(100, truncate=False), FakeAgent(), 0, CFG)
     assert len(buffer) == 3
     assert buffer.observations == [0, 1, 2]  # the obs the action was taken in
     assert buffer.actions == [1, 1, 1]
     assert buffer.log_probs == [-0.5] * 3
-    assert next_obs == 3 and returns == []
+    assert next_obs == 3 and episodes == []
     assert buffer.advantages.shape == buffer.returns.shape == (3,)
+
+
+class RewardEnv(ToyEnv):
+    """Like ToyEnv but with a chosen reward per step (the last one is used for later steps)."""
+
+    def __init__(self, length, truncate, rewards):
+        super().__init__(length, truncate)
+        self.rewards = rewards
+
+    def step(self, action):
+        obs, _, terminated, truncated, info = super().step(action)
+        return obs, self.rewards[min(self.t, len(self.rewards)) - 1], terminated, truncated, info
+
+
+def scaled_cfg(scale):
+    return {**CFG, "reward_scale": scale}
+
+
+def test_reward_scale_applies_to_stored_rewards():
+    env = RewardEnv(100, False, [10.0, -20.0, 30.0])
+    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.1))
+    assert buffer.rewards == pytest.approx([1.0, -2.0, 3.0])
+
+
+def test_truncation_bootstrap_is_not_scaled_and_not_logged_as_reward():
+    # reward 50 at scale 0.01 -> 0.5; V(next) = 10, gamma = 0.9 -> bootstrap 0.9*10 = 9.0
+    # rewards hold only the scaled env reward; the bootstrap is unscaled and stored apart
+    env = RewardEnv(2, True, [50.0, 50.0])
+    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.01))
+    assert buffer.rewards == pytest.approx([0.5, 0.5, 0.5])
+    assert buffer.bootstraps == pytest.approx([0.0, 9.0, 0.0])
+    assert buffer.dones == [0.0, 1.0, 0.0]
+
+
+def test_advantages_include_truncation_bootstrap():
+    # Splitting the bootstrap out must not change GAE: same result as folding it into the reward.
+    env = RewardEnv(2, True, [50.0, 50.0])
+    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.01))
+    folded = make_buffer([0.5, 9.5, 0.5], [10.0, 10.0, 10.0], [0.0, 1.0, 0.0], 10.0)
+    torch.testing.assert_close(buffer.advantages, folded.advantages)
+    torch.testing.assert_close(buffer.returns, folded.returns)
+
+
+def test_death_reward_is_scaled_without_bootstrap():
+    # termination with reward -100 at scale 0.01 -> -1, no bootstrap
+    env = RewardEnv(2, False, [1.0, -100.0])
+    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.01))
+    assert buffer.rewards == pytest.approx([0.01, -1.0, 0.01])
+    assert buffer.dones == [0.0, 1.0, 0.0]
+
+
+def test_episode_returns_stay_unscaled():
+    # ToyEnv reports info["episode"]["r"] = 2.0 for a 2-step episode, whatever the scale
+    _, _, episodes = collect_rollout(ToyEnv(2, truncate=False), FakeAgent(), 0, scaled_cfg(0.01))
+    assert [e["return"] for e in episodes] == [2.0]
 
 
 # ---- PPO update ----
@@ -221,3 +290,68 @@ def test_update_only_changes_lora_and_value_head(agent):
         torch.testing.assert_close(before, after.detach())
     assert not torch.equal(lora_before, agent.model.lora.weight.detach())
     assert not torch.equal(head_before, agent.value_head.weight.detach())
+
+
+# ---- extra PPO statistics ----
+
+def lora_grads_with_value_error(agent, value_error):
+    """LoRA and value-head gradients seen at the optimizer step, for a given value target error."""
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -0.5, 2.0, 0.3], log_prob_shift=[0.1, -0.2, 0.3, 0.0])
+    buffer.returns = torch.tensor(buffer.values) + value_error
+    opt = RecordGrads(agent.trainable_parameters())
+    stats = ppo_update(agent, opt, buffer, ppo_cfg(max_grad_norm=1.0))
+    n = len(agent.lora_parameters())
+    return opt.recorded[0][:n], opt.recorded[0][n:], stats
+
+
+def test_value_head_gradient_is_clipped_separately_from_lora(agent):
+    # The value head starts at zero, so the value loss sends no gradient into the LoRA weights.
+    # With separate clipping the LoRA gradient is therefore the same whatever the value error;
+    # with one joint clip, a huge value-head gradient would shrink it.
+    lora_small, _, _ = lora_grads_with_value_error(agent, 0.0)
+    lora_huge, head_huge, stats = lora_grads_with_value_error(agent, 1000.0)
+    for a, b in zip(lora_small, lora_huge):
+        torch.testing.assert_close(a, b)
+    assert stats["grad_norm_value_head"] > 100          # reported before clipping
+    assert torch.sqrt(sum(g.pow(2).sum() for g in head_huge)) <= 1.0 + 1e-4  # clipped to max_grad_norm
+
+
+def test_reported_lora_grad_norm_matches_recorded_gradients(agent):
+    # max_grad_norm is huge, so nothing is clipped and the norm is that of the gradient itself.
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -0.5, 2.0, 0.3], log_prob_shift=[0.1, -0.2, 0.3, 0.0])
+    opt = RecordGrads(agent.trainable_parameters())
+    stats = ppo_update(agent, opt, buffer, ppo_cfg())
+    n = len(agent.lora_parameters())
+    expected = torch.sqrt(sum(g.pow(2).sum() for g in opt.recorded[0][:n]))
+    assert stats["grad_norm_lora"] == pytest.approx(expected.item(), rel=1e-5)
+
+
+def test_start_ratio_error_is_zero_for_consistent_old_log_probs(agent):
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -1.0, 0.5, -0.5])
+    stats = ppo_update(agent, RecordGrads(agent.trainable_parameters()), buffer, ppo_cfg())
+    assert stats["start_ratio_error"] == pytest.approx(0.0, abs=1e-5)
+
+
+def test_start_ratio_error_detects_perturbed_old_log_probs(agent):
+    # Old log-prob of sample 0 is 0.5 too high: ratio = exp(-0.5) = 0.6065, error = 0.3935
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -1.0, 0.5, -0.5], log_prob_shift=[0.5, 0, 0, 0])
+    stats = ppo_update(agent, RecordGrads(agent.trainable_parameters()), buffer, ppo_cfg())
+    assert stats["start_ratio_error"] == pytest.approx(1 - np.exp(-0.5), abs=1e-5)
+
+
+def explained_variance(agent, returns, values):
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -1.0, 0.5, -0.5])
+    buffer.returns = torch.tensor(returns)
+    buffer.values = list(values)
+    stats = ppo_update(agent, RecordGrads(agent.trainable_parameters()), buffer, ppo_cfg())
+    return stats["explained_variance"]
+
+
+def test_explained_variance_is_one_for_perfect_values(agent):
+    returns = [1.0, 2.0, 3.0, 4.0]
+    assert explained_variance(agent, returns, returns) == pytest.approx(1.0, abs=1e-5)
+
+
+def test_explained_variance_is_zero_for_constant_mean_values(agent):
+    returns = [1.0, 2.0, 3.0, 4.0]
+    assert explained_variance(agent, returns, [2.5] * 4) == pytest.approx(0.0, abs=1e-5)

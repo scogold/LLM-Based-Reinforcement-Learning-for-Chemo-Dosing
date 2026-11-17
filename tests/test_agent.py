@@ -32,11 +32,30 @@ def test_dose_count_must_match_labels(stub_model_and_tokenizer):
         Agent(model, tokenizer, "base", [0.0, 1.0])
 
 
+def test_doses_must_match_the_numbers_in_the_prompt(stub_model_and_tokenizer):
+    """The prompt shows prompts.DOSE_LEVELS, so the env must receive the same values."""
+    model, tokenizer = stub_model_and_tokenizer
+    with pytest.raises(AssertionError, match="doses must equal prompts.DOSE_LEVELS"):
+        Agent(model, tokenizer, "base", [0.0, 0.1, 0.5, 0.75, 1.0])
+
+
+def test_doses_as_list_or_tuple_are_accepted(stub_model_and_tokenizer):
+    model, tokenizer = stub_model_and_tokenizer
+    Agent(model, tokenizer, "base", list(prompts.DOSE_LEVELS))
+    Agent(model, tokenizer, "base", prompts.DOSE_LEVELS)
+
+
 def test_multi_token_label_is_rejected(stub_model_and_tokenizer, monkeypatch):
     model, tokenizer = stub_model_and_tokenizer
     monkeypatch.setattr(tokenizer, "encode", lambda text, add_special_tokens=False: [1, 2])
     with pytest.raises(AssertionError):
         Agent(model, tokenizer, "base", DOSES)
+
+
+def test_forward_does_not_add_special_tokens(agent):
+    """The chat template already writes BOS for Gemma and DeepSeek, so the tokenizer must not add another."""
+    agent._forward(OBS)
+    assert agent.tokenizer.special_token_flags == [False]
 
 
 def test_log_probs_match_manual_computation(agent):
@@ -157,3 +176,11 @@ def test_real_model_labels_are_single_tokens_and_agent_builds(config):
     obs = [0.2, 0.005, 0.0]
     dose, index, log_prob, value = agent.act(obs, greedy=True)
     assert dose == cfg["doses"][index]
+
+
+def test_value_head_starts_at_zero(stub_model_and_tokenizer):
+    model, tokenizer = stub_model_and_tokenizer
+    agent = Agent(model, tokenizer, "base", [0.0, 0.25, 0.5, 0.75, 1.0])
+    assert torch.count_nonzero(agent.value_head.weight) == 0
+    assert torch.count_nonzero(agent.value_head.bias) == 0
+    assert agent.value([0.2, 0.5, 0.1]) == 0.0

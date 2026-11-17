@@ -26,10 +26,15 @@ def pytest_configure(config):
 
 
 class StubTokenizer:
+    def __init__(self):
+        self.special_token_flags = []  # add_special_tokens of each batch call
+
     def encode(self, text, add_special_tokens=False):
         return [ord(text) - ord("A") + 3]  # "A" -> 3, ..., "E" -> 7
 
-    def __call__(self, observations, return_tensors="pt", padding=True):
+    def __call__(self, observations, return_tensors="pt", padding=True, add_special_tokens=True):
+        # Same default as Hugging Face tokenizers, which add BOS/EOS unless told not to.
+        self.special_token_flags.append(add_special_tokens)
         x = torch.tensor(np.array(observations), dtype=torch.float32)
         return SimpleNamespace(to=lambda device: {"x": x})
 
@@ -57,6 +62,14 @@ class StubModel(torch.nn.Module):
         hidden = torch.tanh(self.lora(x))
         logits = self.frozen_head(hidden)
         return SimpleNamespace(logits=logits[:, None, :], hidden_states=(hidden[:, None, :],))
+
+
+def stub_load_model(cfg, adapter_dir=None):
+    """Stands in for agent.load_model: a stub model, with saved adapter weights if adapter_dir is given."""
+    model = StubModel()
+    if adapter_dir is not None:
+        model.lora.load_state_dict(torch.load(Path(adapter_dir) / "adapter_model.pt"))
+    return model, StubTokenizer()
 
 
 @pytest.fixture

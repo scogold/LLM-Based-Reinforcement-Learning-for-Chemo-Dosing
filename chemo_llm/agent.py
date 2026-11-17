@@ -113,6 +113,9 @@ class Agent:
         self.prompt_variant = prompt_variant
         self.doses = doses
         assert len(doses) == len(prompts.ACTION_LABELS), "need one dose per action label"
+        assert tuple(doses) == prompts.DOSE_LEVELS, (
+            f"doses must equal prompts.DOSE_LEVELS {prompts.DOSE_LEVELS} because the prompt shows "
+            f"those numbers, but config has {tuple(doses)}")
 
         token_ids = [tokenizer.encode(label, add_special_tokens=False) for label in prompts.ACTION_LABELS]
         assert all(len(ids) == 1 for ids in token_ids), f"action labels must be single tokens: {token_ids}"
@@ -120,11 +123,16 @@ class Agent:
 
         hidden_size = model.get_input_embeddings().embedding_dim
         self.value_head = torch.nn.Linear(hidden_size, 1).to(model.device)
+        # Start from V(s) = 0 so a random head doesn't produce large early value errors.
+        torch.nn.init.zeros_(self.value_head.weight)
+        torch.nn.init.zeros_(self.value_head.bias)
 
     def _forward(self, observations):
         """Return (log_probs [B, K], values [B]) for a batch of observations."""
         texts = [prompts.build_prompt(obs, self.prompt_variant, self.tokenizer) for obs in observations]
-        inputs = self.tokenizer(texts, return_tensors="pt", padding=True).to(self.model.device)
+        # The chat template already starts with BOS for Gemma and DeepSeek, so don't add another.
+        inputs = self.tokenizer(texts, return_tensors="pt", padding=True,
+                                add_special_tokens=False).to(self.model.device)
         # logits_to_keep=1 skips the full [B, T, vocab] logits tensor, which is large.
         out = self.model(**inputs, output_hidden_states=True, logits_to_keep=1, use_cache=False)
         log_probs = out.logits[:, -1, self.action_token_ids].float().log_softmax(-1)
@@ -163,9 +171,11 @@ class Agent:
         entropy = -(log_probs.exp() * log_probs).sum(-1)
         return chosen, entropy, values
 
+    def lora_parameters(self):
+        return [p for p in self.model.parameters() if p.requires_grad]
+
     def trainable_parameters(self):
-        lora = [p for p in self.model.parameters() if p.requires_grad]
-        return lora + list(self.value_head.parameters())
+        return self.lora_parameters() + list(self.value_head.parameters())
 
     def save(self, directory):
         directory = Path(directory)

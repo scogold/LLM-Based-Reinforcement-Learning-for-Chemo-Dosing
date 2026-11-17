@@ -3,9 +3,10 @@
 # settings here so every model and baseline is compared under the same conditions.
 
 env:
-  id: AhnChemoEnv-continuous-setting1   # setting1 has no noise: every seed is the same patient.
-                                        # setting2 varies drug response; 3-5 add state and
-                                        # observation noise.
+  id: AhnChemoEnv-continuous-setting2   # setting2: each seed gives a patient with a different
+                                        # drug response; no state or observation noise.
+                                        # (setting1: every seed is the same patient;
+                                        # 3-5 add state and observation noise.)
   max_t: 600                            # steps per episode; one step is 6 hours, so 150 days
 
 # Dose sent to the env for each answer label A-E, in order.
@@ -23,10 +24,15 @@ ppo:
   vf_coef: 0.5
   ent_coef: 0.01
   max_grad_norm: 1.0
-  lr: 1.0e-5               # used by scripts/train.py to build the optimizer
+  reward_scale: 0.01       # rewards x this before GAE: returns of +-100 become +-1, so the
+                           # value loss does not swamp the policy loss
+  lr: 1.0e-5               # LoRA learning rate
+  value_head_lr: 1.0e-4    # value head learning rate; higher because it starts untrained
 
 train:
   prompt_variant: expert   # base | expert | reward (see prompts.py)
-  updates: 200             # PPO updates; each collects ppo.rollout_steps env steps
-                           # (200 x 64 = 12,800 steps, about 21 episodes of 600 steps)
+  updates: 500             # PPO updates; each collects ppo.rollout_steps env steps
+                           # (500 x 64 = 32,000 steps, about 53 episodes of 600 steps).
+                           # Rough guess for 8-10 hours; train.py prints the real time per
+                           # update and an estimated total, so tune this after a short run.
   save_every: 20           # save the adapter every this many updates
