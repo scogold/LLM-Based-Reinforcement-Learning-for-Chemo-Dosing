@@ -24,3 +24,9 @@ ppo:
   ent_coef: 0.01
   max_grad_norm: 1.0
   lr: 1.0e-5               # used by scripts/train.py to build the optimizer
+
+train:
+  prompt_variant: expert   # base | expert | reward (see prompts.py)
+  updates: 200             # PPO updates; each collects ppo.rollout_steps env steps
+                           # (200 x 64 = 12,800 steps, about 21 episodes of 600 steps)
+  save_every: 20           # save the adapter every this many updates
