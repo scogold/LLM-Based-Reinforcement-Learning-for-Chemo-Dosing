@@ -1,0 +1,16 @@
+# MedGemma 4B (instruction-tuned). Only model settings go here; env, doses and PPO come from
+# base.yaml so every model is compared under the same conditions.
+# Gated on Hugging Face: accept the license on the model page and run `hf auth login` first.
+# It is a Gemma 3 vision-language model; AutoModelForCausalLM loads it as
+# Gemma3ForConditionalGeneration (see agent.py).
+
+model:
+  name: google/medgemma-4b-it
+  load_in_4bit: true          # 4B would fit in bf16, but 4-bit keeps all three models comparable
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.0              # keep 0: dropout makes PPO's old/new log-prob ratio noisy
+    # Regex instead of a list: the vision tower also has q/k/v_proj layers, and a plain list
+    # would put LoRA on them too. This matches only the language model's attention layers.
+    target_modules: '.*language_model.*\.(q_proj|k_proj|v_proj|o_proj)'

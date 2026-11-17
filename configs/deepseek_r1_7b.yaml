@@ -1,0 +1,13 @@
+# DeepSeek R1-Distill (Qwen 7B). Only model settings go here; env, doses and PPO come from
+# base.yaml so every model is compared under the same conditions.
+# Its chat template can open a <think> block; prompts.build_prompt closes it so the model
+# answers with a letter straight away.
+
+model:
+  name: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+  load_in_4bit: true          # needed to fit 7B + PPO gradients in 16 GB
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.0              # keep 0: dropout makes PPO's old/new log-prob ratio noisy
+    target_modules: [q_proj, k_proj, v_proj, o_proj]

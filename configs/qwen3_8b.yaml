@@ -1,0 +1,12 @@
+# Qwen3 8B. Only model settings go here; env, doses and PPO come from base.yaml so every
+# model is compared under the same conditions.
+# Thinking mode is turned off in prompts.build_prompt (enable_thinking=False).
+
+model:
+  name: Qwen/Qwen3-8B
+  load_in_4bit: true          # needed to fit 8B + PPO gradients in 16 GB
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.0              # keep 0: dropout makes PPO's old/new log-prob ratio noisy
+    target_modules: [q_proj, k_proj, v_proj, o_proj]
