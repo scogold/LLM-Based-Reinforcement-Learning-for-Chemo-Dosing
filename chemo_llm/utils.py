@@ -3,7 +3,7 @@
 Reads these config sections (configs/base.yaml, overridden by the per-model file):
 
     env:
-      id: AhnChemoEnv-continuous-setting1   # DTRGym env ID; setting1 is noise-free, 2-5 add noise.
+      id: AhnChemoEnv-continuous-setting2   # DTRGym env ID; setting1 is noise-free, 2-5 add noise.
                                             # Plain "AhnChemoEnv-continuous" is NOT noise-free.
       max_t: 600                            # steps per episode; one step is 6 hours, so 150 days
     doses: [0.0, 0.25, 0.5, 0.75, 1.0]      # used by agent.py; continuous AhnChemoEnv takes doses in [0, 1]
