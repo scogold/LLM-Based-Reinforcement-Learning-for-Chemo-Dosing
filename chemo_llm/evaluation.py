@@ -1,23 +1,45 @@
-"""Evaluation metrics for AhnChemoEnv episodes (pure functions, stdlib only).
+"""Evaluation for the chemo-dosing agents: run episodes, log them, and compute metrics.
 
-Episode log format: a list of per-step dicts. Keys (extra keys are ignored):
-  reward      float   env reward at this step                      (required)
-  tumor       float   tumor cells AFTER the step                   (required)
-  immune      float   immune cells after the step                  (required)
-  drug        float   drug concentration after the step            (required)
-  dose        float   dose actually sent to the env, in [0, 1]     (required)
-  normal      float   normal cells after the step (optional)
-  terminated  bool    True on the step where the patient died (env `terminated`)  (optional)
-  dose_index  int     index of the chosen dose level (optional; used for histograms)
-  log_prob    float   log-prob of the chosen action from Agent.act (optional)
-  parse_ok    bool    only if some agent can fail to produce a valid action (optional;
-                      the logit-readout Agent cannot, so you can leave it out)
+Everything is plain Python (standard library only) and works with any policy that has the
+same call shape as Agent.act, so the LLM agent, the PPO-trained agent, the zero-shot agent
+(adapter disabled) and the simple baselines are all scored the same way.
 
-IMPORTANT: for tumor/immune/drug/normal, log the TRUE simulator state, not the
-noisy or masked observation, so metrics stay comparable across noise settings.
-The agent's observation is a different thing. Check whether AhnChemoEnv exposes
-the true state (e.g. in `info` or on `env.unwrapped`). Normal cells are hidden
-from the agent but are still part of the simulator state, so use them here.
+Running episodes:
+    run_episode(env, act_fn, seed, true_state_fn)   play one episode, return the step log.
+    evaluate_policy(env, act_fn, seeds, ...)         one episode per seed; returns per-episode
+                                                     metrics and the raw logs. Use the same
+                                                     seeds for every agent so they all treat
+                                                     the same patients.
+    baseline_policy(name, doses, seed)               non-LLM reference policies: "zero"
+                                                     (never dose), "half", "max", "random".
+    save_episode_logs(path, logs)                    write raw logs as JSON for plotting.
+    act_fn(obs) returns (env_action, action_index, log_prob or None, value).
+
+Step log: one dict per env step, with keys
+    reward, dose, dose_index, terminated      always present
+    tumor, immune, drug                       state after the step
+    normal                                    normal cells, if a true_state_fn provides it
+    log_prob                                  the agent's log-probability of its action, if any
+The state values come from true_state_fn(env, obs, info) when given (the real simulator
+state, unaffected by observation noise). Otherwise they are read from the observation, with
+masked (NaN) values replaced by the previous value, and normal cells are not available.
+
+Metrics, per episode (episode_metrics) and across episodes (aggregate: mean, std, 95% CI):
+    return                                        total reward
+    died                                          1 if the episode ended by patient death
+                                                  (AhnChemoEnv terminates when normal cells
+                                                  fall below 70% of their starting level)
+    tumor_final_ratio, tumor_min_ratio, cleared   tumor size relative to the start; cleared
+                                                  means at most CLEARED_RATIO of the start
+    normal_min, normal_final, normal_min_ratio    toxicity (needs normal cells in the log)
+    immune_min, immune_final                      immune cell levels
+    total_drug, mean_dose, drug_conc_max          how much drug was used
+    aggressive_frac, max_high_dose_streak         steps at or above HIGH_DOSE, longest run
+    mean_action_prob                              how confident the policy was in its actions
+    parse_fail_rate                               only for agents that can fail to give a
+                                                  valid action; unused by the logit-based Agent
+
+Used by scripts/evaluate.py, scripts/plot.py and tests/test_evaluation.py.
 """
 from __future__ import annotations
 

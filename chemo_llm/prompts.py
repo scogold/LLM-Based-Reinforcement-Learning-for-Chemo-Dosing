@@ -1,21 +1,41 @@
-"""Observation -> prompt for the LLM policy. Stdlib only.
+"""Turns an AhnChemoEnv observation into the text prompt the LLM policy reads.
 
-Contract with agent.py:
+The policy picks a dose by reading the model's next-token probabilities over a fixed set
+of answer letters (see agent.py), so this module has two jobs: describe the patient and the
+dose options clearly, and end the prompt exactly where the model should write its answer.
+
+Public interface:
+    ACTION_LABELS    answer letters ["A", ..., "E"], one per dose level. Each must be a
+                     single token for every model we use (agent.py checks this).
+    DOSE_LEVELS      the dose rate each label stands for, (0.0, 0.25, 0.5, 0.75, 1.0).
+                     cfg["doses"] must hold the same values in the same order, because the
+                     prompt tells the model these numbers and the env receives cfg["doses"][k].
+    PROMPT_VARIANTS  "base", "expert", "reward". All three give the task and the dose options.
+                     "expert" adds background knowledge (the drug harms normal cells, drug
+                     lingers in the blood, immune cells help, stop when the tumor is small).
+                     "reward" adds that and also says what the score rewards and penalises.
     build_prompt(obs, variant, tokenizer) -> str
-        Full prompt with the chat template applied. It ends exactly where the model
-        writes its action, so the NEXT token is the bare label (e.g. "A").
-    ACTION_LABELS: single-token labels, one per dose, in the same order as cfg["doses"].
+                     The full chat-templated prompt for one observation.
 
-Keep cfg["doses"] equal to DOSE_LEVELS below (configs/base.yaml), because the prompt
-describes each label with these numbers and the env receives cfg["doses"][k].
+Observation formats accepted (values in OBS_NAMES order: tumor, immune, drug):
+    1-D [tumor, immune, drug]      current state only.
+    2-D, one row per step,         current state plus trends (rising / falling / flat),
+    oldest first                   tumor relative to the oldest row, and up to MAX_HISTORY
+                                   earlier steps.
+    NaN or None values are written as "unavailable" (the env can mask values in its noisier
+    settings).
 
-`obs` is whatever the env wrapper gives the agent:
-  * 1-D sequence [tumor, immune, drug]  (order set by OBS_NAMES)  -> current state only
-  * 2-D sequence, rows oldest -> newest (a stacked history)       -> adds trends/history
-NaN or None values are shown as "unavailable".
+Chat template handling:
+    The prompt ends right after the assistant turn header, so the next token is the bare
+    answer letter. Qwen3's template is called with enable_thinking=False, which inserts an
+    empty think block. DeepSeek-R1 templates can end with an open "<think>" tag; it is closed
+    here so the model answers instead of starting to reason.
 
-VERIFY before running: OBS_NAMES order, STEP_HOURS, and that every model's prompt ends
-cleanly (print the last ~100 characters of build_prompt for Qwen3, MedGemma, DeepSeek).
+Constants that must match the rest of the project: OBS_NAMES (the env's observation order:
+tumor cells, immune cells, drug concentration) and STEP_HOURS (6 hours per env step).
+
+Used by agent.py (build_prompt, ACTION_LABELS), configs/base.yaml (doses), and
+tests/test_prompts.py. Standard library only.
 """
 from __future__ import annotations
 
