@@ -8,16 +8,30 @@ env:
                                         # (setting1: every seed is the same patient;
                                         # 3-5 add state and observation noise.)
   max_t: 600                            # steps per episode; one step is 6 hours, so 150 days
+  history: 6                            # earlier steps the policy sees besides the current one,
+                                        # so it can tell how a patient responds to the drug
+  death_penalty: 300                    # TRAINING reward only: extra -300 on death (on top of the
+                                        # env's -100). A surviving patient loses at most ~2.1 per
+                                        # step, ~210 discounted at gamma 0.99, so dying is always
+                                        # worse. Constant, because the policy can't see the day.
+                                        # Evaluation reports the env's own reward.
 
 # Dose sent to the env for each answer label A-E, in order.
 # Must equal prompts.DOSE_LEVELS, because the prompt tells the model these numbers.
 doses: [0.0, 0.25, 0.5, 0.75, 1.0]
 
 ppo:
-  rollout_steps: 64        # env steps collected per update
-  epochs: 4                # passes over each rollout
+  rollout_steps: 128       # env steps collected per update
+  n_envs: 8                # patients per rollout: 128 / 8 = 16 consecutive steps from each,
+                           # so one update doesn't see only one patient in one disease phase
+  epochs: 2                # passes over each rollout (at most; see target_kl). 2 epochs over
+                           # 128 steps cost the same as 4 over 64 but use twice the fresh data.
+  target_kl: 0.05          # stop an update early once the policy has moved this far from
+                           # the one that collected the data
   minibatch_size: 16       # samples per optimizer step
-  micro_batch_size: 2      # samples per forward pass; gradients accumulate up to minibatch_size
+  micro_batch_size: 1      # samples per forward pass; gradients accumulate up to minibatch_size.
+                           # Keep 1: act() runs at batch size 1, and in bf16 a different batch size
+                           # changes the log-probs by up to ~0.3, which breaks the PPO ratio.
   gamma: 0.99
   gae_lambda: 0.95
   clip_range: 0.2
@@ -31,8 +45,9 @@ ppo:
 
 train:
   prompt_variant: expert   # base | expert | reward (see prompts.py)
-  updates: 500             # PPO updates; each collects ppo.rollout_steps env steps
-                           # (500 x 64 = 32,000 steps, about 53 episodes of 600 steps).
-                           # Rough guess for 8-10 hours; train.py prints the real time per
-                           # update and an estimated total, so tune this after a short run.
+  updates: 300             # PPO updates; each collects ppo.rollout_steps env steps
+                           # (300 x 128 = 38,400 steps, about 64 episodes of 600 steps).
+                           # train.py prints the real time per update and the hours left.
   save_every: 20           # save the adapter every this many updates
+  value_warmup_updates: 5  # the first updates train only the value head (policy unchanged),
+                           # so advantages have a useful baseline before the policy moves

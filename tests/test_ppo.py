@@ -82,42 +82,47 @@ CFG = {"rollout_steps": 3, "gamma": 0.9, "gae_lambda": 0.8, "reward_scale": 1.0}
 
 
 def test_truncation_adds_discounted_bootstrap_to_reward():
-    buffer, next_obs, episodes = collect_rollout(ToyEnv(2, truncate=True), FakeAgent(), 0, CFG)
-    # step 2 is truncated: env reward stays 1; the bootstrap 0.9 * V(next) = 9 is stored apart
+    buffer, next_obs, episodes = collect_rollout([ToyEnv(2, truncate=True)], FakeAgent(), [0], CFG)
+    # step 2 is truncated: env reward stays 1; the bootstrap 0.9 * V(next) = 9 is stored apart.
+    # step 3 ends the env's run: done=1 and bootstrap 9 too.
     assert buffer.rewards == [1.0, 1.0, 1.0]
-    assert buffer.bootstraps == [0.0, 9.0, 0.0]
-    assert buffer.dones == [0.0, 1.0, 0.0]
+    assert buffer.bootstraps == [0.0, 9.0, 9.0]
+    assert buffer.dones == [0.0, 1.0, 1.0]
     assert [e["return"] for e in episodes] == [2.0]
-    assert next_obs == 1  # a new episode started after the cut, one step into it
+    assert next_obs == [1]  # a new episode started after the cut, one step into it
 
 
 def test_episode_died_is_true_on_termination_and_false_on_truncation():
-    _, _, dead = collect_rollout(ToyEnv(2, truncate=False), FakeAgent(), 0, CFG)
-    _, _, cut = collect_rollout(ToyEnv(2, truncate=True), FakeAgent(), 0, CFG)
+    _, _, dead = collect_rollout([ToyEnv(2, truncate=False)], FakeAgent(), [0], CFG)
+    _, _, cut = collect_rollout([ToyEnv(2, truncate=True)], FakeAgent(), [0], CFG)
     assert dead == [{"return": 2.0, "length": 2, "died": True}]
     assert cut == [{"return": 2.0, "length": 2, "died": False}]
 
 
 def test_episode_length_is_reported_for_each_finished_episode():
     # 3 steps, episode length 1 -> three episodes of length 1
-    _, _, episodes = collect_rollout(ToyEnv(1, truncate=False), FakeAgent(), 0, CFG)
+    _, _, episodes = collect_rollout([ToyEnv(1, truncate=False)], FakeAgent(), [0], CFG)
     assert [e["length"] for e in episodes] == [1, 1, 1]
 
 
 def test_termination_does_not_bootstrap():
-    buffer, _, episodes = collect_rollout(ToyEnv(2, truncate=False), FakeAgent(), 0, CFG)
+    buffer, _, episodes = collect_rollout([ToyEnv(2, truncate=False)], FakeAgent(), [0], CFG)
+    # death at step 2: no bootstrap; step 3 is the run end (not a death): bootstrap 9
     assert buffer.rewards == [1.0, 1.0, 1.0]
-    assert buffer.dones == [0.0, 1.0, 0.0]
+    assert buffer.bootstraps == [0.0, 0.0, 9.0]
+    assert buffer.dones == [0.0, 1.0, 1.0]
     assert [e["return"] for e in episodes] == [2.0]
 
 
 def test_rollout_records_transitions():
-    buffer, next_obs, episodes = collect_rollout(ToyEnv(100, truncate=False), FakeAgent(), 0, CFG)
+    buffer, next_obs, episodes = collect_rollout([ToyEnv(100, truncate=False)], FakeAgent(), [0], CFG)
     assert len(buffer) == 3
     assert buffer.observations == [0, 1, 2]  # the obs the action was taken in
     assert buffer.actions == [1, 1, 1]
     assert buffer.log_probs == [-0.5] * 3
-    assert next_obs == 3 and episodes == []
+    assert buffer.dones == [0.0, 0.0, 1.0]       # the run end is a done
+    assert buffer.bootstraps == [0.0, 0.0, 9.0]  # 0.9 * V = 9
+    assert next_obs == [3] and episodes == []
     assert buffer.advantages.shape == buffer.returns.shape == (3,)
 
 
@@ -139,7 +144,7 @@ def scaled_cfg(scale):
 
 def test_reward_scale_applies_to_stored_rewards():
     env = RewardEnv(100, False, [10.0, -20.0, 30.0])
-    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.1))
+    buffer, _, _ = collect_rollout([env], FakeAgent(), [0], scaled_cfg(0.1))
     assert buffer.rewards == pytest.approx([1.0, -2.0, 3.0])
 
 
@@ -147,17 +152,17 @@ def test_truncation_bootstrap_is_not_scaled_and_not_logged_as_reward():
     # reward 50 at scale 0.01 -> 0.5; V(next) = 10, gamma = 0.9 -> bootstrap 0.9*10 = 9.0
     # rewards hold only the scaled env reward; the bootstrap is unscaled and stored apart
     env = RewardEnv(2, True, [50.0, 50.0])
-    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.01))
+    buffer, _, _ = collect_rollout([env], FakeAgent(), [0], scaled_cfg(0.01))
     assert buffer.rewards == pytest.approx([0.5, 0.5, 0.5])
-    assert buffer.bootstraps == pytest.approx([0.0, 9.0, 0.0])
-    assert buffer.dones == [0.0, 1.0, 0.0]
+    assert buffer.bootstraps == pytest.approx([0.0, 9.0, 9.0])
+    assert buffer.dones == [0.0, 1.0, 1.0]
 
 
 def test_advantages_include_truncation_bootstrap():
     # Splitting the bootstrap out must not change GAE: same result as folding it into the reward.
     env = RewardEnv(2, True, [50.0, 50.0])
-    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.01))
-    folded = make_buffer([0.5, 9.5, 0.5], [10.0, 10.0, 10.0], [0.0, 1.0, 0.0], 10.0)
+    buffer, _, _ = collect_rollout([env], FakeAgent(), [0], scaled_cfg(0.01))
+    folded = make_buffer([0.5, 9.5, 9.5], [10.0, 10.0, 10.0], [0.0, 1.0, 1.0], 0.0)
     torch.testing.assert_close(buffer.advantages, folded.advantages)
     torch.testing.assert_close(buffer.returns, folded.returns)
 
@@ -165,15 +170,94 @@ def test_advantages_include_truncation_bootstrap():
 def test_death_reward_is_scaled_without_bootstrap():
     # termination with reward -100 at scale 0.01 -> -1, no bootstrap
     env = RewardEnv(2, False, [1.0, -100.0])
-    buffer, _, _ = collect_rollout(env, FakeAgent(), 0, scaled_cfg(0.01))
+    buffer, _, _ = collect_rollout([env], FakeAgent(), [0], scaled_cfg(0.01))
     assert buffer.rewards == pytest.approx([0.01, -1.0, 0.01])
-    assert buffer.dones == [0.0, 1.0, 0.0]
+    assert buffer.dones == [0.0, 1.0, 1.0]
+    assert buffer.bootstraps == pytest.approx([0.0, 0.0, 9.0])  # none after death; run end bootstraps
 
 
 def test_episode_returns_stay_unscaled():
     # ToyEnv reports info["episode"]["r"] = 2.0 for a 2-step episode, whatever the scale
-    _, _, episodes = collect_rollout(ToyEnv(2, truncate=False), FakeAgent(), 0, scaled_cfg(0.01))
+    _, _, episodes = collect_rollout([ToyEnv(2, truncate=False)], FakeAgent(), [0], scaled_cfg(0.01))
     assert [e["return"] for e in episodes] == [2.0]
+
+
+# ---- several envs ----
+
+class ValueIsObsAgent(FakeAgent):
+    """Like FakeAgent, but V(obs) = obs, so a bootstrap shows which obs it was computed from."""
+
+    def act(self, obs):
+        return DOSES[1], 1, -0.5, float(obs)
+
+    def value(self, obs):
+        return float(obs)
+
+
+class OffsetEnv(ToyEnv):
+    """ToyEnv whose observations are shifted by `offset`, to tell the envs apart."""
+
+    def __init__(self, length, truncate, offset):
+        super().__init__(length, truncate)
+        self.offset = offset
+
+    def reset(self):
+        return self.offset, {}
+
+    def step(self, action):
+        obs, *rest = super().step(action)
+        return (obs + self.offset, *rest)
+
+
+def cfg_steps(n):
+    return {**CFG, "rollout_steps": n}
+
+
+def test_rollout_takes_consecutive_runs_from_each_env_in_order():
+    envs = [OffsetEnv(100, False, 0), OffsetEnv(100, False, 1000)]
+    buffer, next_obs, _ = collect_rollout(envs, ValueIsObsAgent(), [0, 1000], cfg_steps(4))
+    # 4 steps / 2 envs = 2 steps each: env 0 saw obs 0, 1 and env 1 saw 1000, 1001
+    assert buffer.observations == [0, 1, 1000, 1001]
+    assert buffer.dones == [0.0, 1.0, 0.0, 1.0]  # each run ends with done
+    assert next_obs == [2, 1002]                  # carried on per env
+
+
+def test_run_end_bootstraps_from_next_obs():
+    envs = [OffsetEnv(100, False, 0), OffsetEnv(100, False, 1000)]
+    buffer, _, _ = collect_rollout(envs, ValueIsObsAgent(), [0, 1000], cfg_steps(4))
+    # V(obs) = obs, gamma 0.9: env 0 ends with next obs 2 -> 1.8; env 1 with 1002 -> 901.8
+    assert buffer.bootstraps == pytest.approx([0.0, 1.8, 0.0, 901.8])
+
+
+def test_death_at_run_end_has_no_bootstrap():
+    buffer, _, _ = collect_rollout([ToyEnv(2, False)], ValueIsObsAgent(), [0], cfg_steps(2))
+    assert buffer.dones == [0.0, 1.0] and buffer.bootstraps == [0.0, 0.0]
+
+
+def test_truncation_at_run_end_bootstraps_from_pre_reset_obs():
+    buffer, next_obs, _ = collect_rollout([ToyEnv(2, True)], ValueIsObsAgent(), [0], cfg_steps(2))
+    # truncated at step 2 (obs 2): bootstrap 0.9 * 2 = 1.8, not V of the reset obs (0)
+    assert buffer.bootstraps == pytest.approx([0.0, 1.8])
+    assert buffer.dones == [0.0, 1.0]
+    assert next_obs == [0]  # but the env continues from the reset obs
+
+
+def test_advantages_do_not_leak_across_env_boundaries():
+    envs = [RewardEnv(100, False, [2.0]), RewardEnv(100, False, [100.0])]
+    buffer, _, _ = collect_rollout(envs, FakeAgent(), [0, 0], cfg_steps(4))
+    assert buffer.rewards == [2.0, 2.0, 100.0, 100.0]
+    # V = 10 everywhere, gamma 0.9, lambda 0.8. Env 0: bootstrap 9 at its last step.
+    # delta = 2 + 9 - 10 = 1 at step 1; delta0 = 2 + 0.9*10 - 10 = 1
+    # A1 = 1, A0 = 1 + 0.9*0.8*1 = 1.72
+    torch.testing.assert_close(buffer.advantages[:2], torch.tensor([1.72, 1.0]))
+    # Env 1: deltas are 100 + 9 - 10 = 99 at both steps; A1 = 99, A0 = 99 + 0.72*99
+    torch.testing.assert_close(buffer.advantages[2:], torch.tensor([99 * 1.72, 99.0]))
+
+
+def test_rollout_steps_must_divide_evenly_over_envs():
+    envs = [ToyEnv(100, False), ToyEnv(100, False)]
+    with pytest.raises(AssertionError):
+        collect_rollout(envs, FakeAgent(), [0, 0], cfg_steps(3))
 
 
 # ---- PPO update ----
@@ -197,7 +281,7 @@ class RecordGrads(torch.optim.Optimizer):
 
 def ppo_cfg(**overrides):
     cfg = dict(epochs=1, minibatch_size=4, micro_batch_size=4, clip_range=0.2, vf_coef=0.5,
-               ent_coef=0.01, max_grad_norm=1e6)
+               ent_coef=0.01, max_grad_norm=1e6, target_kl=1e9)
     return {**cfg, **overrides}
 
 
@@ -355,3 +439,47 @@ def test_explained_variance_is_one_for_perfect_values(agent):
 def test_explained_variance_is_zero_for_constant_mean_values(agent):
     returns = [1.0, 2.0, 3.0, 4.0]
     assert explained_variance(agent, returns, [2.5] * 4) == pytest.approx(0.0, abs=1e-5)
+
+
+# ---- value_only ----
+
+def test_value_only_update_trains_value_head_but_not_lora(agent):
+    torch.manual_seed(0)
+    torch.nn.init.normal_(agent.value_head.weight)  # a zero head would send no gradient to LoRA anyway
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -1.0, 0.5, -0.5])
+    lora_before = agent.model.lora.weight.detach().clone()
+    head_before = agent.value_head.weight.detach().clone()
+    opt = torch.optim.SGD(agent.trainable_parameters(), lr=0.1)
+    ppo_update(agent, opt, buffer, ppo_cfg(), value_only=True)
+    assert torch.equal(lora_before, agent.model.lora.weight.detach())
+    assert not torch.equal(head_before, agent.value_head.weight.detach())
+
+
+# ---- target_kl ----
+
+SHIFT = [0.1, -0.2, 0.3, 0.0]
+
+
+def test_no_early_stop_with_large_target_kl(agent):
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -1.0, 0.5, -0.5], log_prob_shift=SHIFT)
+    opt = torch.optim.SGD(agent.trainable_parameters(), lr=0.01)
+    stats = ppo_update(agent, opt, buffer, ppo_cfg(epochs=3, minibatch_size=3, micro_batch_size=3))
+    assert stats["optimizer_steps"] == 3 * 2  # epochs * ceil(4 / 3)
+
+
+def test_tiny_target_kl_stops_after_first_optimizer_step(agent):
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -1.0, 0.5, -0.5], log_prob_shift=SHIFT)
+    opt = torch.optim.SGD(agent.trainable_parameters(), lr=0.01)
+    stats = ppo_update(agent, opt, buffer,
+                       ppo_cfg(epochs=3, minibatch_size=2, micro_batch_size=2, target_kl=1e-12))
+    assert stats["optimizer_steps"] == 1
+
+
+def test_approx_kl_is_non_negative_estimator(agent):
+    buffer = fixed_buffer(agent, [0, 1, 2, 3], [1.0, -1.0, 0.5, -0.5], log_prob_shift=SHIFT)
+    stats = ppo_update(agent, RecordGrads(agent.trainable_parameters()), buffer, ppo_cfg())
+    # ratio = exp(-shift); kl = mean((ratio - 1) - log ratio) = mean(exp(-s) - 1 + s) >= 0
+    s = torch.tensor(SHIFT)
+    expected = (torch.exp(-s) - 1 + s).mean().item()
+    assert expected > 0
+    assert stats["approx_kl"] == pytest.approx(expected, abs=1e-5)

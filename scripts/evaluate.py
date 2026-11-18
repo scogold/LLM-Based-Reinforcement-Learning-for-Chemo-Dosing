@@ -105,7 +105,11 @@ def main(argv=None):
         results[label] = aggregate(metrics)
         print(f"finished {label}")
 
-    (out / "summary.json").write_text(json.dumps(results, indent=2))
+    # Add to an existing summary, so several evaluate.py calls can share one --out folder.
+    summary_path = out / "summary.json"
+    summary = json.loads(summary_path.read_text()) if summary_path.exists() else {}
+    summary.update(results)
+    summary_path.write_text(json.dumps(summary, indent=2))
     print("\n" + format_table(results))
     print(f"\nsaved to {out}")
     return results

@@ -1,6 +1,6 @@
 """Shared stubs: a tiny fake model and tokenizer, so Agent and PPO run on CPU in milliseconds.
 
-The stub "prompt" is just the observation itself (build_prompt is patched), and the stub
+The stub "prompt" is just the latest observation row (build_prompt is patched), and the stub
 tokenizer turns a batch of observations into a float tensor. The model is
     hidden = tanh(lora(x));  logits = frozen_head(hidden)
 so `lora` plays the trainable LoRA weights and `frozen_head` plays the frozen base model.
@@ -77,7 +77,9 @@ def stub_prompt(monkeypatch, request):
     """The stub prompt is the observation itself (real prompts are used in gpu tests)."""
     if request.node.get_closest_marker("gpu"):
         return
-    monkeypatch.setattr(prompts, "build_prompt", lambda obs, variant, tokenizer: obs)
+    # make_env gives a 2-D history (rows oldest first); the stub prompt is its latest row.
+    monkeypatch.setattr(prompts, "build_prompt",
+                        lambda obs, variant, tokenizer: np.asarray(obs)[-1] if np.ndim(obs) == 2 else obs)
 
 
 @pytest.fixture

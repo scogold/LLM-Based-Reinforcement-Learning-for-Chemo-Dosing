@@ -1,5 +1,6 @@
 """Tests for chemo_llm.evaluation."""
 import math
+from pathlib import Path
 
 from chemo_llm import evaluation as M
 
@@ -144,3 +145,18 @@ def test_baseline_names():
         M.baseline_policy("nope", [0, 1])
     assert M.baseline_policy("zero", [0, 1])(None)[0] == 0
     assert M.baseline_policy("max", [0, 1])(None)[0] == 1
+
+def test_evaluate_script_merges_summary_across_calls(tmp_path):
+    import importlib.util
+    import json
+    root = Path(__file__).parent.parent
+    spec = importlib.util.spec_from_file_location("evaluate_script", root / "scripts" / "evaluate.py")
+    script = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(script)
+    out = tmp_path / "eval"
+    common = [str(root / "configs" / "qwen3_8b.yaml"), "--mode", "baseline", "--seeds", "100",
+              "--max-t", "5", "--out", str(out)]
+    script.main(common + ["--baseline", "zero"])
+    script.main(common + ["--baseline", "max"])
+    summary = json.loads((out / "summary.json").read_text())
+    assert set(summary) == {"zero", "max"}
