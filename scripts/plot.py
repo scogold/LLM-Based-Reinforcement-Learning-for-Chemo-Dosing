@@ -1,11 +1,16 @@
-"""Make the paper figures from logs written by scripts/evaluate.py.
+"""Make the paper figures from logs written by scripts/evaluate.py and scripts/train.py.
 
-Each input file is one method (its name becomes the legend label). Files that are not
-episode logs, such as summary.json, are skipped. Figures:
-  trajectories.png  tumor, immune, drug and dose over time for one seed, all methods
-                    (plus normal cells if the logs have them)
-  metrics.png       mean with 95% CI across seeds for the headline metrics
-  doses.png         share of steps spent at each dose level, per method (in .gitignore for now)
+    python scripts/plot.py runs/eval-main/*.json --out runs/eval-main/plots
+    python scripts/plot.py --runs runs/qwen3_8b-seed0-<time> --out runs/plots
+
+Each evaluation log file is one method (its name becomes the legend label). Files that are
+not episode logs, such as summary.json, are skipped. Figures:
+  trajectories.png    tumor, immune, drug and dose over time for one seed, all methods
+                      (plus normal cells if the logs have them)
+  metrics.png         mean with 95% CI across seeds for the headline metrics
+  doses.png           share of steps spent at each dose level, per method (in .gitignore for now)
+  learning_curve.png  (with --runs) episode return during training, one line per run,
+                      read from the run's TensorBoard logs
 Runs headless (no display needed).
 """
 import argparse
@@ -105,23 +110,48 @@ def plot_doses(methods, out, n_levels=5):
     plt.close(fig)
 
 
+def plot_learning_curve(run_dirs, out):
+    """Episode return (env units) against training env steps, one line per training run."""
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+
+    fig, ax = plt.subplots(figsize=(7, 3.6))
+    for run_dir in map(Path, run_dirs):
+        events = EventAccumulator(str(run_dir))  # reads every event file, so resumed runs too
+        events.Reload()
+        points = events.Scalars("episode/return")
+        ax.plot([p.step for p in points], [p.value for p in points], marker=".", label=run_dir.name)
+    ax.set_xlabel("training env steps")
+    ax.set_ylabel("episode return")
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(out / "learning_curve.png", dpi=150)
+    plt.close(fig)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("logs", nargs="+", help="JSON log files from scripts/evaluate.py")
+    ap.add_argument("logs", nargs="*", help="JSON log files from scripts/evaluate.py")
+    ap.add_argument("--runs", nargs="+", default=[], help="training run directories, for the learning curve")
     ap.add_argument("--out", default="figures")
     ap.add_argument("--seed", type=int, default=None, help="patient seed for the trajectory plot")
     ap.add_argument("--levels", type=int, default=5, help="number of dose options")
     args = ap.parse_args(argv)
+    if not args.logs and not args.runs:
+        ap.error("give evaluation log files, --runs, or both")
 
-    methods = load_logs(args.logs)
-    if not methods:
-        sys.exit("no episode logs found in the given files")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    plot_trajectories(methods, out, args.seed)
-    plot_metrics(methods, out)
-    plot_doses(methods, out, args.levels)
-    print(f"wrote 3 figures for {list(methods)} to {out}")
+    if args.logs:
+        methods = load_logs(args.logs)
+        if not methods:
+            sys.exit("no episode logs found in the given files")
+        plot_trajectories(methods, out, args.seed)
+        plot_metrics(methods, out)
+        plot_doses(methods, out, args.levels)
+        print(f"wrote 3 figures for {list(methods)} to {out}")
+    if args.runs:
+        plot_learning_curve(args.runs, out)
+        print(f"wrote learning_curve.png for {len(args.runs)} run(s) to {out}")
 
 
 if __name__ == "__main__":

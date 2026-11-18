@@ -23,8 +23,8 @@ def tiny_config(tmp_path):
     config_dir.mkdir()
     base = yaml.safe_load((ROOT / "configs" / "base.yaml").read_text())
     base["env"]["max_t"] = 4
-    base["ppo"].update(rollout_steps=6, epochs=1, minibatch_size=4, micro_batch_size=2)
-    base["train"].update(updates=3, save_every=2)
+    base["ppo"].update(rollout_steps=6, n_envs=2, target_kl=1.0e9, epochs=1, minibatch_size=4, micro_batch_size=2)
+    base["train"].update(updates=3, save_every=2, value_warmup_updates=1)
     (config_dir / "base.yaml").write_text(yaml.safe_dump(base))
     (config_dir / "stub.yaml").write_text(yaml.safe_dump({"model": {"name": "stub"}}))
     return config_dir / "stub.yaml"
@@ -101,3 +101,47 @@ def test_resume_continues_in_same_run_directory(tiny_config, tmp_path, monkeypat
     final = torch.load(run / "adapter-final" / "trainer.pt")
     assert final["update"] == 6
     assert len(list(run.glob("events.out.tfevents.*"))) >= 1
+
+
+def test_train_logs_compute_and_ppo_scalars(tiny_config, tmp_path, monkeypatch, stub_prompt):
+    import torch
+    from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+
+    train = load_train_script()
+    monkeypatch.setattr(train, "load_model", stub_load_model)
+    monkeypatch.chdir(tmp_path)
+    train.main([str(tiny_config), "--seed", "3"])
+
+    run = next((tmp_path / "runs").glob("stub-seed3-*"))
+    assert yaml.safe_load((run / "config.yaml").read_text())["git_commit"]
+    events = EventAccumulator(str(run), size_guidance={"scalars": 0})
+    events.Reload()
+    tags = events.Tags()["scalars"]
+    assert len(events.Scalars("compute/minutes")) == 3  # updates=3
+    assert all(p.value >= 0 for p in events.Scalars("compute/minutes"))
+    assert "ppo/start_ratio_error" in tags and "ppo/explained_variance" in tags
+    assert ("compute/peak_vram_gb" in tags) == torch.cuda.is_available()
+
+
+def test_value_warmup_updates_leave_lora_unchanged(tiny_config, tmp_path, monkeypatch, stub_prompt):
+    import torch
+
+    train = load_train_script()
+    initial = []
+
+    def capturing_load_model(cfg, adapter_dir=None):
+        model, tokenizer = stub_load_model(cfg, adapter_dir)
+        initial.append(model.lora.weight.detach().clone())
+        return model, tokenizer
+
+    monkeypatch.setattr(train, "load_model", capturing_load_model)
+    monkeypatch.chdir(tmp_path)
+    base = yaml.safe_load((tiny_config.parent / "base.yaml").read_text())
+    base["train"]["value_warmup_updates"] = 3  # all 3 updates are warm-up
+    (tiny_config.parent / "base.yaml").write_text(yaml.safe_dump(base))
+
+    train.main([str(tiny_config), "--seed", "3"])
+
+    run = next((tmp_path / "runs").glob("stub-seed3-*"))
+    final = torch.load(run / "adapter-final" / "adapter_model.pt")
+    assert torch.equal(final["weight"], initial[0])

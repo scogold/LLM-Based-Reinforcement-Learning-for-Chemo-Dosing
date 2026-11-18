@@ -3,8 +3,9 @@
     python scripts/train.py configs/qwen3_8b.yaml --seed 0
 
 Creates runs/<config>-seed<seed>-<time>/ containing:
-    config.yaml          the resolved config and seed
-    events.out.tfevents  TensorBoard logs (tensorboard --logdir runs)
+    config.yaml          the resolved config, seed and git commit
+    events.out.tfevents  TensorBoard logs (tensorboard --logdir runs); plot the learning curve
+                         with scripts/plot.py --runs <run directory>
     adapter-0020/ ...    checkpoints every train.save_every updates
     adapter-final/       the final checkpoint
 Each checkpoint holds the LoRA adapter and value head (what evaluate.py loads) plus
@@ -59,7 +60,10 @@ def main(argv=None):
     # On resume, shift the seed so the run doesn't replay the patients it started with.
     seed = args.seed + first_update - 1
     set_seed(seed)
-    env = make_env(cfg, seed)
+    # One env per patient. seed * 100 + i gives each its own stream of patients. The first
+    # reset also draws its seed from that stream (a random number below 2**31), so it is very
+    # unlikely to be one of the evaluation seeds (100+).
+    envs = [make_env(cfg, seed * 100 + i, training=True) for i in range(ppo_cfg["n_envs"])]
     model, tokenizer = load_model(cfg, adapter_dir=args.resume)
     agent = Agent(model, tokenizer, train_cfg["prompt_variant"], cfg["doses"])
     optimizer = torch.optim.AdamW([
@@ -77,10 +81,12 @@ def main(argv=None):
     print(f"run directory: {run_dir}, starting at update {first_update}")
 
     start_time = time.time()
-    obs, _ = env.reset(seed=seed)
+    observations = [env.reset()[0] for env in envs]
     for update in range(first_update, train_cfg["updates"] + 1):
-        buffer, obs, episodes = collect_rollout(env, agent, obs, ppo_cfg)
-        stats = ppo_update(agent, optimizer, buffer, ppo_cfg)
+        update_start = time.time()
+        value_only = update <= train_cfg["value_warmup_updates"]
+        buffer, observations, episodes = collect_rollout(envs, agent, observations, ppo_cfg)
+        stats = ppo_update(agent, optimizer, buffer, ppo_cfg, value_only=value_only)
 
         # x-axis: total env steps so far
         step = update * ppo_cfg["rollout_steps"]
@@ -90,17 +96,24 @@ def main(argv=None):
         writer.add_scalar("rollout/mean_dose",
                           sum(cfg["doses"][a] for a in buffer.actions) / len(buffer), step)
         for episode in episodes:
+            # Training return includes the DeathPenalty; evaluate.py reports the env's own reward.
             writer.add_scalar("episode/return", episode["return"], step)
             writer.add_scalar("episode/length", episode["length"], step)
             writer.add_scalar("episode/died", float(episode["died"]), step)
+        # Compute cost for the paper: total training time is the sum of compute/minutes
+        # (this also works across a --resume).
+        writer.add_scalar("compute/minutes", (time.time() - update_start) / 60, step)
+        if torch.cuda.is_available():
+            writer.add_scalar("compute/peak_vram_gb", torch.cuda.max_memory_reserved() / 2**30, step)
 
         minutes_per_update = (time.time() - start_time) / 60 / (update - first_update + 1)
         hours_left = minutes_per_update * (train_cfg["updates"] - update) / 60
         print(f"update {update}/{train_cfg['updates']}  "
               f"policy_loss {stats['policy_loss']:.4f}  value_loss {stats['value_loss']:.4f}  "
               f"approx_kl {stats['approx_kl']:.4f}  explained_var {stats['explained_variance']:.2f}  "
-              f"episodes finished {len(episodes)}  "
-              f"{minutes_per_update:.1f} min/update, about {hours_left:.1f} h left")
+              f"steps {stats['optimizer_steps']}  episodes finished {len(episodes)}  "
+              f"{minutes_per_update:.1f} min/update, about {hours_left:.1f} h left"
+              + ("  (value warm-up)" if value_only else ""))
         if stats["start_ratio_error"] > 0.01:
             print(f"  WARNING: PPO ratio was off by {stats['start_ratio_error']:.4f} before any update; "
                   "act() and evaluate() are computing different log-probs for the same input")
