@@ -1,0 +1,19 @@
+# Qwen3 8B with no history in the prompt: the policy sees only the current observation.
+# This is the prompt run 1 (runs/qwen3_8b-seed0-20261117-170451-run1) was trained with, so use
+# this config to evaluate that run, and to train a history ablation against qwen3_8b.yaml.
+#
+#   python scripts/evaluate.py configs/qwen3_8b_no_history.yaml --mode trained --adapter <run1>/adapter-final
+#
+# Keep the model section identical to qwen3_8b.yaml.
+
+model:
+  name: Qwen/Qwen3-8B
+  load_in_4bit: true
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj]
+
+env:
+  history: 0                  # current observation only
