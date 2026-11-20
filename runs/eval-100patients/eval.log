@@ -1,0 +1,285 @@
+=== 16:10:24 start: configs/qwen3_8b.yaml --mode baseline
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished zero
+finished half
+finished max
+finished random
+
+policy                return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+zero                 76.7±65          0.61±0.096            1.2±0.18         0.749±0.013                 0±0                 0±0                   -
+half                -9.52±53          0.34±0.093          0.637±0.16         0.772±0.012              211±25                 0±0                   -
+max                  -199±43           0.15±0.07          0.308±0.11          0.786±0.01              518±39                 1±0                   -
+random                 -9±53          0.34±0.093          0.645±0.16          0.77±0.012              209±25         0.395±0.011                   -
+
+saved to runs\eval-100patients
+=== 16:10:51 done
+=== 16:10:51 start: configs/qwen3_8b.yaml --mode trained --adapter runs/qwen3_8b-seed0-20261118-102431-run2/adapter-final --label run2-qwen-penalty-history
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+W1119 16:10:55.447000 24328 .venv\Lib\site-packages\torch\utils\flop_counter.py:113] triton not found; flop counting will not work for triton kernels
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:01<09:10,  1.38s/it]Loading weights:   1%|          | 2/399 [00:02<08:15,  1.25s/it]Loading weights:   1%|1         | 4/399 [00:02<03:19,  1.98it/s]Loading weights:   2%|1         | 6/399 [00:02<01:58,  3.33it/s]Loading weights:   4%|3         | 15/399 [00:02<00:33, 11.63it/s]Loading weights:   5%|4         | 18/399 [00:03<00:30, 12.57it/s]Loading weights:   7%|6         | 26/399 [00:03<00:17, 20.77it/s]Loading weights:   8%|7         | 30/399 [00:03<00:16, 22.21it/s]Loading weights:   9%|9         | 37/399 [00:03<00:12, 28.66it/s]Loading weights:  10%|#         | 41/399 [00:03<00:12, 28.72it/s]Loading weights:  12%|#2        | 48/399 [00:03<00:10, 33.87it/s]Loading weights:  13%|#3        | 52/399 [00:03<00:10, 33.39it/s]Loading weights:  15%|#4        | 59/399 [00:04<00:08, 38.69it/s]Loading weights:  16%|#6        | 64/399 [00:04<00:08, 37.34it/s]Loading weights:  18%|#7        | 70/399 [00:04<00:08, 39.19it/s]Loading weights:  19%|#8        | 75/399 [00:04<00:08, 37.37it/s]Loading weights:  20%|##        | 81/399 [00:04<00:08, 39.18it/s]Loading weights:  22%|##1       | 86/399 [00:04<00:08, 36.45it/s]Loading weights:  23%|##3       | 92/399 [00:04<00:07, 38.58it/s]Loading weights:  24%|##4       | 96/399 [00:05<00:08, 35.29it/s]Loading weights:  26%|##5       | 103/399 [00:05<00:07, 39.71it/s]Loading weights:  27%|##7       | 108/399 [00:05<00:07, 36.78it/s]Loading weights:  29%|##8       | 114/399 [00:05<00:07, 38.07it/s]Loading weights:  30%|##9       | 118/399 [00:05<00:08, 34.11it/s]Loading weights:  31%|###1      | 125/399 [00:05<00:07, 38.53it/s]Loading weights:  32%|###2      | 129/399 [00:05<00:07, 35.00it/s]Loading weights:  34%|###4      | 136/399 [00:06<00:06, 39.24it/s]Loading weights:  35%|###5      | 140/399 [00:06<00:07, 34.52it/s]Loading weights:  37%|###6      | 147/399 [00:06<00:06, 37.88it/s]Loading weights:  38%|###7      | 151/399 [00:06<00:07, 33.36it/s]Loading weights:  40%|###9      | 158/399 [00:06<00:06, 37.28it/s]Loading weights:  41%|####      | 162/399 [00:06<00:06, 34.01it/s]Loading weights:  42%|####2     | 169/399 [00:07<00:05, 38.37it/s]Loading weights:  43%|####3     | 173/399 [00:07<00:06, 34.58it/s]Loading weights:  45%|####5     | 180/399 [00:07<00:05, 38.41it/s]Loading weights:  46%|####6     | 184/399 [00:07<00:06, 34.10it/s]Loading weights:  48%|####7     | 191/399 [00:07<00:05, 38.15it/s]Loading weights:  49%|####8     | 195/399 [00:07<00:05, 34.33it/s]Loading weights:  51%|#####     | 202/399 [00:07<00:05, 38.92it/s]Loading weights:  52%|#####1    | 206/399 [00:08<00:05, 33.76it/s]Loading weights:  53%|#####3    | 213/399 [00:08<00:05, 36.15it/s]Loading weights:  54%|#####4    | 217/399 [00:08<00:05, 31.54it/s]Loading weights:  56%|#####6    | 224/399 [00:08<00:05, 32.44it/s]Loading weights:  57%|#####7    | 228/399 [00:08<00:06, 28.30it/s]Loading weights:  59%|#####8    | 235/399 [00:09<00:05, 30.95it/s]Loading weights:  60%|#####9    | 239/399 [00:09<00:05, 28.48it/s]Loading weights:  62%|######1   | 246/399 [00:09<00:04, 31.59it/s]Loading weights:  63%|######2   | 250/399 [00:09<00:05, 28.96it/s]Loading weights:  64%|######4   | 257/399 [00:09<00:04, 32.12it/s]Loading weights:  65%|######5   | 261/399 [00:09<00:04, 28.95it/s]Loading weights:  67%|######7   | 268/399 [00:10<00:04, 31.08it/s]Loading weights:  68%|######8   | 272/399 [00:10<00:04, 26.68it/s]Loading weights:  70%|######9   | 279/399 [00:10<00:04, 29.53it/s]Loading weights:  71%|#######   | 282/399 [00:10<00:04, 25.47it/s]Loading weights:  73%|#######2  | 290/399 [00:10<00:03, 31.09it/s]Loading weights:  74%|#######3  | 294/399 [00:11<00:03, 27.33it/s]Loading weights:  75%|#######5  | 301/399 [00:11<00:03, 29.68it/s]Loading weights:  76%|#######6  | 305/399 [00:11<00:03, 25.76it/s]Loading weights:  78%|#######8  | 312/399 [00:11<00:03, 27.35it/s]Loading weights:  79%|#######8  | 315/399 [00:12<00:03, 22.93it/s]Loading weights:  81%|########  | 323/399 [00:12<00:02, 27.52it/s]Loading weights:  82%|########1 | 326/399 [00:12<00:03, 23.44it/s]Loading weights:  84%|########3 | 334/399 [00:12<00:02, 28.25it/s]Loading weights:  84%|########4 | 337/399 [00:12<00:02, 23.95it/s]Loading weights:  86%|########6 | 345/399 [00:13<00:01, 28.71it/s]Loading weights:  87%|########7 | 348/399 [00:13<00:02, 24.09it/s]Loading weights:  89%|########9 | 356/399 [00:13<00:01, 28.91it/s]Loading weights:  90%|########9 | 359/399 [00:13<00:01, 24.15it/s]Loading weights:  92%|#########1| 367/399 [00:13<00:01, 28.68it/s]Loading weights:  93%|#########2| 370/399 [00:14<00:01, 24.11it/s]Loading weights:  95%|#########4| 378/399 [00:14<00:00, 28.44it/s]Loading weights:  95%|#########5| 381/399 [00:14<00:00, 24.00it/s]Loading weights:  97%|#########7| 389/399 [00:14<00:00, 28.30it/s]Loading weights:  98%|#########8| 392/399 [00:14<00:00, 23.87it/s]Loading weights: 100%|##########| 399/399 [00:15<00:00, 26.51it/s]
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished run2-qwen-penalty-history
+
+policy                                   return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+run2-qwen-penalty-history                 94±81          0.36±0.095          0.735±0.16         0.764±0.012             48.3±16         0.196±0.037        0.997±0.0011
+
+saved to runs\eval-100patients
+=== 17:36:06 done
+=== 17:36:06 start: configs/qwen3_8b_env_reward.yaml --mode trained --adapter runs/qwen3_8b_env_reward-seed0-20261118-234149-run3/adapter-final --label run3-qwen-envreward-history
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+W1119 17:36:11.379000 41168 .venv\Lib\site-packages\torch\utils\flop_counter.py:113] triton not found; flop counting will not work for triton kernels
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:00<05:17,  1.26it/s]Loading weights:   1%|          | 2/399 [00:01<04:34,  1.45it/s]Loading weights:   1%|1         | 5/399 [00:01<01:30,  4.37it/s]Loading weights:   4%|3         | 15/399 [00:01<00:23, 16.18it/s]Loading weights:   5%|5         | 21/399 [00:01<00:16, 22.56it/s]Loading weights:   7%|6         | 27/399 [00:01<00:12, 28.91it/s]Loading weights:   9%|9         | 37/399 [00:02<00:08, 41.30it/s]Loading weights:  11%|#1        | 45/399 [00:02<00:07, 48.93it/s]Loading weights:  13%|#3        | 52/399 [00:02<00:06, 51.16it/s]Loading weights:  15%|#5        | 60/399 [00:02<00:06, 54.80it/s]Loading weights:  18%|#7        | 70/399 [00:02<00:05, 63.87it/s]Loading weights:  20%|#9        | 78/399 [00:02<00:04, 66.39it/s]Loading weights:  22%|##1       | 86/399 [00:02<00:04, 64.34it/s]Loading weights:  23%|##3       | 93/399 [00:02<00:04, 65.08it/s]Loading weights:  26%|##5       | 103/399 [00:02<00:04, 69.47it/s]Loading weights:  28%|##7       | 111/399 [00:03<00:04, 69.67it/s]Loading weights:  30%|##9       | 119/399 [00:03<00:04, 67.18it/s]Loading weights:  32%|###1      | 126/399 [00:03<00:04, 65.23it/s]Loading weights:  34%|###4      | 136/399 [00:03<00:03, 71.61it/s]Loading weights:  36%|###6      | 144/399 [00:03<00:03, 71.31it/s]Loading weights:  38%|###8      | 152/399 [00:03<00:03, 66.51it/s]Loading weights:  40%|###9      | 159/399 [00:03<00:03, 65.80it/s]Loading weights:  42%|####2     | 169/399 [00:03<00:03, 71.30it/s]Loading weights:  44%|####4     | 177/399 [00:04<00:03, 71.05it/s]Loading weights:  46%|####6     | 185/399 [00:04<00:03, 68.44it/s]Loading weights:  48%|####8     | 192/399 [00:04<00:03, 66.62it/s]Loading weights:  51%|#####     | 202/399 [00:04<00:02, 73.22it/s]Loading weights:  53%|#####2    | 210/399 [00:04<00:02, 73.72it/s]Loading weights:  55%|#####4    | 218/399 [00:04<00:02, 68.37it/s]Loading weights:  56%|#####6    | 225/399 [00:04<00:02, 68.36it/s]Loading weights:  59%|#####8    | 235/399 [00:04<00:02, 72.54it/s]Loading weights:  61%|######    | 243/399 [00:04<00:02, 70.92it/s]Loading weights:  63%|######2   | 251/399 [00:05<00:02, 69.86it/s]Loading weights:  65%|######4   | 259/399 [00:05<00:02, 62.29it/s]Loading weights:  67%|######7   | 269/399 [00:05<00:01, 68.49it/s]Loading weights:  70%|######9   | 279/399 [00:05<00:01, 73.38it/s]Loading weights:  72%|#######1  | 287/399 [00:05<00:01, 72.71it/s]Loading weights:  74%|#######3  | 295/399 [00:05<00:01, 69.69it/s]Loading weights:  76%|#######5  | 303/399 [00:05<00:01, 63.77it/s]Loading weights:  78%|#######8  | 313/399 [00:05<00:01, 69.92it/s]Loading weights:  81%|########  | 323/399 [00:06<00:01, 73.84it/s]Loading weights:  83%|########2 | 331/399 [00:06<00:00, 72.63it/s]Loading weights:  85%|########4 | 339/399 [00:06<00:00, 69.25it/s]Loading weights:  87%|########6 | 346/399 [00:06<00:00, 67.23it/s]Loading weights:  89%|########9 | 356/399 [00:06<00:00, 73.40it/s]Loading weights:  91%|#########1| 364/399 [00:06<00:00, 73.85it/s]Loading weights:  93%|#########3| 372/399 [00:06<00:00, 67.97it/s]Loading weights:  95%|#########5| 380/399 [00:06<00:00, 62.56it/s]Loading weights:  98%|#########7| 390/399 [00:07<00:00, 68.02it/s]Loading weights: 100%|##########| 399/399 [00:07<00:00, 55.61it/s]
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished run3-qwen-envreward-history
+
+policy                                     return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+run3-qwen-envreward-history               86.3±66          0.59±0.097           1.14±0.18         0.756±0.014           3.77±0.27         0.097±0.024         0.943±0.015
+
+saved to runs\eval-100patients
+=== 18:38:13 done
+=== 18:38:13 start: configs/medgemma_4b.yaml --mode trained --adapter runs/medgemma_4b-seed0-20261119-092218-run4/adapter-final --label run4-medgemma-penalty-history
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+W1119 18:38:18.777000 26792 .venv\Lib\site-packages\torch\utils\flop_counter.py:113] triton not found; flop counting will not work for triton kernels
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'google/medgemma-4b-it'.
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'google/medgemma-4b-it'.
+Loading weights:   0%|          | 0/883 [00:00<?, ?it/s]Loading weights:   0%|          | 1/883 [00:01<20:48,  1.42s/it]Loading weights:   0%|          | 4/883 [00:01<04:23,  3.34it/s]Loading weights:   2%|2         | 18/883 [00:01<00:47, 18.22it/s]Loading weights:   3%|3         | 30/883 [00:01<00:28, 30.14it/s]Loading weights:   5%|4         | 42/883 [00:01<00:19, 42.85it/s]Loading weights:   6%|6         | 55/883 [00:02<00:14, 55.40it/s]Loading weights:   8%|7         | 68/883 [00:02<00:12, 66.63it/s]Loading weights:   9%|9         | 81/883 [00:02<00:10, 77.35it/s]Loading weights:  11%|#         | 94/883 [00:02<00:09, 82.06it/s]Loading weights:  12%|#2        | 107/883 [00:02<00:08, 90.52it/s]Loading weights:  14%|#3        | 120/883 [00:02<00:07, 95.44it/s]Loading weights:  15%|#5        | 133/883 [00:02<00:07, 100.17it/s]Loading weights:  17%|#6        | 146/883 [00:02<00:07, 100.01it/s]Loading weights:  18%|#8        | 159/883 [00:03<00:07, 102.11it/s]Loading weights:  19%|#9        | 172/883 [00:03<00:06, 106.25it/s]Loading weights:  21%|##        | 183/883 [00:03<00:07, 94.60it/s] Loading weights:  22%|##1       | 193/883 [00:03<00:08, 79.26it/s]Loading weights:  23%|##2       | 202/883 [00:03<00:08, 79.65it/s]Loading weights:  24%|##4       | 212/883 [00:03<00:08, 82.51it/s]Loading weights:  25%|##5       | 224/883 [00:03<00:07, 89.57it/s]Loading weights:  27%|##6       | 234/883 [00:03<00:07, 90.25it/s]Loading weights:  28%|##7       | 244/883 [00:04<00:07, 82.06it/s]Loading weights:  29%|##8       | 253/883 [00:04<00:08, 76.51it/s]Loading weights:  30%|##9       | 263/883 [00:04<00:07, 79.88it/s]Loading weights:  31%|###       | 272/883 [00:04<00:08, 73.45it/s]Loading weights:  32%|###1      | 280/883 [00:04<00:09, 60.55it/s]Loading weights:  33%|###2      | 290/883 [00:04<00:09, 65.07it/s]Loading weights:  34%|###4      | 302/883 [00:04<00:08, 72.23it/s]Loading weights:  35%|###5      | 310/883 [00:05<00:08, 69.71it/s]Loading weights:  36%|###6      | 318/883 [00:05<00:09, 59.91it/s]Loading weights:  37%|###7      | 330/883 [00:05<00:08, 69.00it/s]Loading weights:  39%|###8      | 342/883 [00:05<00:06, 78.78it/s]Loading weights:  40%|####      | 355/883 [00:05<00:06, 84.11it/s]Loading weights:  42%|####1     | 367/883 [00:05<00:05, 89.45it/s]Loading weights:  43%|####2     | 377/883 [00:05<00:06, 78.66it/s]Loading weights:  44%|####3     | 386/883 [00:06<00:06, 73.38it/s]Loading weights:  45%|####4     | 394/883 [00:06<00:06, 72.12it/s]Loading weights:  46%|####5     | 406/883 [00:06<00:05, 83.65it/s]Loading weights:  47%|####7     | 419/883 [00:06<00:05, 88.63it/s]Loading weights:  49%|####8     | 432/883 [00:06<00:04, 90.30it/s]Loading weights:  50%|#####     | 443/883 [00:06<00:04, 95.09it/s]Loading weights:  59%|#####8    | 519/883 [00:06<00:01, 264.32it/s]Loading weights:  66%|######6   | 583/883 [00:06<00:00, 357.72it/s]Loading weights:  72%|#######2  | 637/883 [00:06<00:00, 407.32it/s]Loading weights:  79%|#######8  | 697/883 [00:07<00:00, 442.39it/s]Loading weights:  86%|########5 | 759/883 [00:07<00:00, 487.27it/s]Loading weights:  95%|#########5| 839/883 [00:07<00:00, 548.38it/s]Loading weights: 100%|##########| 883/883 [00:07<00:00, 120.26it/s]
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished run4-medgemma-penalty-history
+
+policy                                       return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+run4-medgemma-penalty-history               73.9±76           0.15±0.07          0.311±0.11          0.783±0.01              259±35          0.565±0.06        0.902±0.0061
+
+saved to runs\eval-100patients
+=== 19:48:49 done
+=== 19:48:49 start: configs/qwen3_8b.yaml --mode zeroshot --label qwen-zeroshot-history
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+W1119 19:48:54.333000 38308 .venv\Lib\site-packages\torch\utils\flop_counter.py:113] triton not found; flop counting will not work for triton kernels
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'Qwen/Qwen3-8B'.
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'Qwen/Qwen3-8B'.
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:00<05:40,  1.17it/s]Loading weights:   1%|          | 2/399 [00:01<04:55,  1.34it/s]Loading weights:   1%|1         | 5/399 [00:01<01:36,  4.08it/s]Loading weights:   4%|3         | 15/399 [00:01<00:25, 14.99it/s]Loading weights:   5%|5         | 21/399 [00:01<00:17, 21.05it/s]Loading weights:   7%|6         | 27/399 [00:02<00:13, 27.08it/s]Loading weights:   9%|9         | 37/399 [00:02<00:09, 38.90it/s]Loading weights:  11%|#         | 43/399 [00:02<00:08, 42.28it/s]Loading weights:  13%|#2        | 50/399 [00:02<00:07, 45.71it/s]Loading weights:  15%|#5        | 60/399 [00:02<00:06, 54.90it/s]Loading weights:  18%|#7        | 70/399 [00:02<00:05, 63.86it/s]Loading weights:  20%|#9        | 78/399 [00:02<00:05, 61.78it/s]Loading weights:  21%|##1       | 85/399 [00:02<00:05, 54.01it/s]Loading weights:  23%|##3       | 93/399 [00:03<00:05, 54.27it/s]Loading weights:  26%|##5       | 103/399 [00:03<00:04, 60.94it/s]Loading weights:  28%|##7       | 110/399 [00:03<00:04, 61.39it/s]Loading weights:  29%|##9       | 117/399 [00:03<00:04, 57.44it/s]Loading weights:  32%|###1      | 126/399 [00:03<00:04, 61.26it/s]Loading weights:  34%|###4      | 136/399 [00:03<00:03, 66.36it/s]Loading weights:  36%|###5      | 143/399 [00:03<00:04, 61.75it/s]Loading weights:  38%|###7      | 150/399 [00:04<00:04, 55.16it/s]Loading weights:  40%|###9      | 159/399 [00:04<00:04, 59.41it/s]Loading weights:  42%|####2     | 169/399 [00:04<00:03, 67.25it/s]Loading weights:  44%|####4     | 176/399 [00:04<00:03, 66.66it/s]Loading weights:  46%|####5     | 183/399 [00:04<00:03, 62.43it/s]Loading weights:  48%|####8     | 192/399 [00:04<00:03, 64.99it/s]Loading weights:  51%|#####     | 202/399 [00:04<00:02, 71.88it/s]Loading weights:  53%|#####2    | 210/399 [00:04<00:02, 71.91it/s]Loading weights:  55%|#####4    | 218/399 [00:04<00:02, 66.44it/s]Loading weights:  56%|#####6    | 225/399 [00:05<00:02, 65.40it/s]Loading weights:  59%|#####8    | 235/399 [00:05<00:02, 72.32it/s]Loading weights:  61%|######    | 243/399 [00:05<00:02, 69.47it/s]Loading weights:  63%|######2   | 251/399 [00:05<00:02, 67.51it/s]Loading weights:  65%|######4   | 258/399 [00:05<00:02, 63.72it/s]Loading weights:  67%|######7   | 268/399 [00:05<00:01, 68.56it/s]Loading weights:  69%|######8   | 275/399 [00:05<00:01, 64.00it/s]Loading weights:  71%|#######   | 282/399 [00:06<00:02, 55.34it/s]Loading weights:  73%|#######2  | 291/399 [00:06<00:01, 57.51it/s]Loading weights:  75%|#######5  | 301/399 [00:06<00:01, 65.59it/s]Loading weights:  77%|#######7  | 309/399 [00:06<00:01, 65.36it/s]Loading weights:  79%|#######9  | 316/399 [00:06<00:01, 64.26it/s]Loading weights:  81%|########1 | 324/399 [00:06<00:01, 63.87it/s]Loading weights:  84%|########3 | 334/399 [00:06<00:00, 68.56it/s]Loading weights:  86%|########5 | 342/399 [00:06<00:00, 69.53it/s]Loading weights:  87%|########7 | 349/399 [00:07<00:00, 64.97it/s]Loading weights:  89%|########9 | 357/399 [00:07<00:00, 64.30it/s]Loading weights:  92%|#########1| 367/399 [00:07<00:00, 71.47it/s]Loading weights:  94%|#########3| 375/399 [00:07<00:00, 68.58it/s]Loading weights:  96%|#########5| 382/399 [00:07<00:00, 64.64it/s]Loading weights:  98%|#########7| 390/399 [00:07<00:00, 66.71it/s]Loading weights: 100%|##########| 399/399 [00:07<00:00, 51.85it/s]
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished qwen-zeroshot-history
+
+policy                               return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+qwen-zeroshot-history               94.9±70           0.4±0.097          0.747±0.17         0.765±0.013             80.9±13       0.0121±0.0038         0.732±0.024
+
+saved to runs\eval-100patients
+=== 21:05:37 done
+=== 21:05:37 start: configs/medgemma_4b.yaml --mode zeroshot --label medgemma-zeroshot-history
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+W1119 21:05:42.301000 41644 .venv\Lib\site-packages\torch\utils\flop_counter.py:113] triton not found; flop counting will not work for triton kernels
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'google/medgemma-4b-it'.
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main/additional_chat_templates
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/google/medgemma-4b-it/tree/main
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'google/medgemma-4b-it'.
+Loading weights:   0%|          | 0/883 [00:00<?, ?it/s]Loading weights:   0%|          | 1/883 [00:00<12:47,  1.15it/s]Loading weights:   0%|          | 4/883 [00:00<02:52,  5.10it/s]Loading weights:   2%|2         | 18/883 [00:01<00:33, 26.11it/s]Loading weights:   5%|4         | 42/883 [00:01<00:13, 62.38it/s]Loading weights:   6%|6         | 55/883 [00:01<00:11, 74.08it/s]Loading weights:   8%|7         | 68/883 [00:01<00:09, 84.93it/s]Loading weights:   9%|9         | 81/883 [00:01<00:08, 95.01it/s]Loading weights:  11%|#         | 95/883 [00:01<00:07, 105.29it/s]Loading weights:  13%|#3        | 117/883 [00:01<00:05, 131.60it/s]Loading weights:  15%|#5        | 134/883 [00:01<00:05, 132.53it/s]Loading weights:  18%|#7        | 156/883 [00:02<00:04, 151.07it/s]Loading weights:  20%|#9        | 173/883 [00:02<00:04, 144.51it/s]Loading weights:  22%|##1       | 192/883 [00:02<00:04, 153.35it/s]Loading weights:  24%|##3       | 211/883 [00:02<00:04, 158.51it/s]Loading weights:  26%|##5       | 228/883 [00:02<00:04, 150.90it/s]Loading weights:  28%|##8       | 250/883 [00:02<00:03, 164.49it/s]Loading weights:  30%|###       | 267/883 [00:02<00:03, 154.92it/s]Loading weights:  33%|###2      | 289/883 [00:02<00:03, 167.33it/s]Loading weights:  35%|###4      | 306/883 [00:02<00:03, 156.89it/s]Loading weights:  37%|###7      | 328/883 [00:03<00:03, 168.64it/s]Loading weights:  39%|###9      | 346/883 [00:03<00:03, 160.41it/s]Loading weights:  41%|####1     | 363/883 [00:03<00:03, 153.47it/s]Loading weights:  43%|####2     | 379/883 [00:03<00:03, 151.79it/s]Loading weights:  45%|####4     | 395/883 [00:03<00:03, 126.58it/s]Loading weights:  47%|####7     | 419/883 [00:03<00:03, 147.32it/s]Loading weights:  49%|####9     | 435/883 [00:03<00:03, 142.09it/s]Loading weights:  59%|#####8    | 519/883 [00:03<00:01, 315.80it/s]Loading weights:  72%|#######1  | 633/883 [00:04<00:00, 517.77it/s]Loading weights:  84%|########4 | 745/883 [00:04<00:00, 676.48it/s]Loading weights:  95%|#########5| 841/883 [00:04<00:00, 747.49it/s]Loading weights: 100%|##########| 883/883 [00:04<00:00, 204.40it/s]
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished medgemma-zeroshot-history
+
+policy                                   return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+medgemma-zeroshot-history                 55±58          0.46±0.098          0.883±0.17         0.767±0.013             86.3±13                 0±0        0.897±0.0077
+
+saved to runs\eval-100patients
+=== 21:48:34 done
+=== 21:48:34 start: configs/qwen3_8b_no_history.yaml --mode trained --adapter runs/qwen3_8b-seed0-20261117-170451-run1/adapter-final --label run1-qwen-envreward-nohistory
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+W1119 21:48:38.427000 28648 .venv\Lib\site-packages\torch\utils\flop_counter.py:113] triton not found; flop counting will not work for triton kernels
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'Qwen/Qwen3-8B'.
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'Qwen/Qwen3-8B'.
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:00<04:55,  1.35it/s]Loading weights:   1%|          | 2/399 [00:01<04:47,  1.38it/s]Loading weights:   1%|1         | 4/399 [00:01<02:00,  3.28it/s]Loading weights:   2%|1         | 6/399 [00:01<01:13,  5.35it/s]Loading weights:   4%|4         | 16/399 [00:01<00:21, 18.19it/s]Loading weights:   6%|5         | 23/399 [00:01<00:14, 26.66it/s]Loading weights:   7%|7         | 28/399 [00:02<00:13, 28.47it/s]Loading weights:   9%|9         | 37/399 [00:02<00:08, 40.52it/s]Loading weights:  11%|#         | 43/399 [00:02<00:07, 44.54it/s]Loading weights:  12%|#2        | 49/399 [00:02<00:07, 47.01it/s]Loading weights:  15%|#4        | 59/399 [00:02<00:06, 54.44it/s]Loading weights:  17%|#6        | 67/399 [00:02<00:05, 59.11it/s]Loading weights:  19%|#8        | 74/399 [00:02<00:05, 57.71it/s]Loading weights:  21%|##        | 82/399 [00:02<00:05, 59.69it/s]Loading weights:  23%|##3       | 92/399 [00:03<00:04, 68.04it/s]Loading weights:  25%|##5       | 100/399 [00:03<00:04, 69.08it/s]Loading weights:  27%|##7       | 108/399 [00:03<00:04, 65.99it/s]Loading weights:  29%|##8       | 115/399 [00:03<00:04, 64.03it/s]Loading weights:  31%|###1      | 125/399 [00:03<00:03, 71.42it/s]Loading weights:  33%|###3      | 133/399 [00:03<00:03, 68.89it/s]Loading weights:  35%|###5      | 140/399 [00:03<00:04, 64.53it/s]Loading weights:  37%|###7      | 148/399 [00:03<00:03, 64.13it/s]Loading weights:  40%|###9      | 158/399 [00:03<00:03, 71.44it/s]Loading weights:  42%|####1     | 166/399 [00:04<00:03, 68.82it/s]Loading weights:  43%|####3     | 173/399 [00:04<00:03, 63.78it/s]Loading weights:  45%|####5     | 181/399 [00:04<00:03, 67.03it/s]Loading weights:  48%|####7     | 191/399 [00:04<00:02, 70.73it/s]Loading weights:  50%|####9     | 199/399 [00:04<00:02, 71.16it/s]Loading weights:  52%|#####1    | 207/399 [00:04<00:02, 66.13it/s]Loading weights:  54%|#####3    | 214/399 [00:04<00:02, 62.85it/s]Loading weights:  56%|#####6    | 224/399 [00:04<00:02, 69.61it/s]Loading weights:  58%|#####8    | 232/399 [00:05<00:02, 68.37it/s]Loading weights:  60%|#####9    | 239/399 [00:05<00:02, 64.31it/s]Loading weights:  62%|######1   | 247/399 [00:05<00:02, 63.99it/s]Loading weights:  64%|######4   | 257/399 [00:05<00:01, 71.30it/s]Loading weights:  66%|######6   | 265/399 [00:05<00:01, 68.79it/s]Loading weights:  68%|######8   | 272/399 [00:05<00:01, 64.75it/s]Loading weights:  70%|#######   | 280/399 [00:05<00:01, 64.37it/s]Loading weights:  72%|#######2  | 288/399 [00:05<00:01, 66.51it/s]Loading weights:  74%|#######3  | 295/399 [00:06<00:01, 58.56it/s]Loading weights:  76%|#######5  | 302/399 [00:06<00:01, 57.37it/s]Loading weights:  78%|#######8  | 312/399 [00:06<00:01, 61.73it/s]Loading weights:  80%|########  | 320/399 [00:06<00:01, 64.50it/s]Loading weights:  82%|########1 | 327/399 [00:06<00:01, 61.78it/s]Loading weights:  84%|########3 | 335/399 [00:06<00:01, 62.16it/s]Loading weights:  86%|########6 | 345/399 [00:06<00:00, 64.80it/s]Loading weights:  88%|########8 | 352/399 [00:06<00:00, 64.41it/s]Loading weights:  90%|########9 | 359/399 [00:07<00:00, 57.32it/s]Loading weights:  92%|#########2| 368/399 [00:07<00:00, 59.21it/s]Loading weights:  95%|#########4| 378/399 [00:07<00:00, 67.14it/s]Loading weights:  96%|#########6| 385/399 [00:07<00:00, 66.11it/s]Loading weights:  98%|#########8| 392/399 [00:07<00:00, 60.58it/s]Loading weights: 100%|##########| 399/399 [00:07<00:00, 51.92it/s]
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished run1-qwen-envreward-nohistory
+
+policy                                       return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+run1-qwen-envreward-nohistory               9.38±92          0.31±0.091          0.824±0.15          0.77±0.012             63.9±20         0.242±0.045         0.627±0.051
+
+saved to runs\eval-100patients
+=== 22:59:08 done
+=== 22:59:08 start: configs/qwen3_8b_no_history.yaml --mode zeroshot --label qwen-zeroshot-nohistory
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\simglucose\patient\t1dpatient.py:7: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\__init__.py:109: DeprecationWarning: 'pkgutil.get_loader' is deprecated and slated for removal in Python 3.14; use importlib.util.find_spec() instead
+  root_dir = Path(pkgutil.get_loader("DTRGym").get_filename()).parent
+W1119 22:59:12.743000 35976 .venv\Lib\site-packages\torch\utils\flop_counter.py:113] triton not found; flop counting will not work for triton kernels
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'Qwen/Qwen3-8B'.
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main/additional_chat_templates
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 1s [Retry 1/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 2s [Retry 2/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 4s [Retry 3/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 8s [Retry 4/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Retrying in 8s [Retry 5/5].
+'[Errno 11001] getaddrinfo failed' thrown while requesting GET https://huggingface.co/api/models/Qwen/Qwen3-8B/tree/main
+Could not reach the Hub ([Errno 11001] getaddrinfo failed). Using cached commit hash for 'Qwen/Qwen3-8B'.
+Loading weights:   0%|          | 0/399 [00:00<?, ?it/s]Loading weights:   0%|          | 1/399 [00:00<04:15,  1.56it/s]Loading weights:   1%|          | 2/399 [00:01<04:06,  1.61it/s]Loading weights:   1%|1         | 5/399 [00:01<01:20,  4.87it/s]Loading weights:   4%|3         | 15/399 [00:01<00:21, 17.76it/s]Loading weights:   5%|4         | 19/399 [00:01<00:17, 21.21it/s]Loading weights:   7%|6         | 26/399 [00:01<00:12, 30.26it/s]Loading weights:   8%|7         | 31/399 [00:01<00:10, 33.46it/s]Loading weights:  10%|9         | 38/399 [00:01<00:09, 38.50it/s]Loading weights:  12%|#2        | 48/399 [00:02<00:07, 49.67it/s]Loading weights:  14%|#4        | 56/399 [00:02<00:06, 55.04it/s]Loading weights:  16%|#5        | 63/399 [00:02<00:06, 55.10it/s]Loading weights:  18%|#7        | 71/399 [00:02<00:05, 59.22it/s]Loading weights:  20%|##        | 81/399 [00:02<00:04, 63.95it/s]Loading weights:  22%|##2       | 88/399 [00:02<00:05, 60.55it/s]Loading weights:  24%|##3       | 95/399 [00:02<00:05, 53.80it/s]Loading weights:  26%|##6       | 104/399 [00:02<00:05, 58.63it/s]Loading weights:  29%|##8       | 114/399 [00:03<00:04, 66.73it/s]Loading weights:  31%|###       | 122/399 [00:03<00:04, 68.28it/s]Loading weights:  33%|###2      | 130/399 [00:03<00:04, 64.65it/s]Loading weights:  34%|###4      | 137/399 [00:03<00:04, 63.98it/s]Loading weights:  37%|###6      | 147/399 [00:03<00:03, 71.17it/s]Loading weights:  39%|###8      | 155/399 [00:03<00:03, 68.54it/s]Loading weights:  41%|####      | 162/399 [00:03<00:03, 63.88it/s]Loading weights:  43%|####2     | 170/399 [00:03<00:03, 66.94it/s]Loading weights:  45%|####5     | 180/399 [00:04<00:03, 70.67it/s]Loading weights:  47%|####7     | 188/399 [00:04<00:03, 69.78it/s]Loading weights:  49%|####9     | 196/399 [00:04<00:02, 69.10it/s]Loading weights:  51%|#####     | 203/399 [00:04<00:03, 64.81it/s]Loading weights:  53%|#####3    | 213/399 [00:04<00:02, 69.08it/s]Loading weights:  55%|#####5    | 220/399 [00:04<00:02, 62.52it/s]Loading weights:  57%|#####6    | 227/399 [00:04<00:03, 54.29it/s]Loading weights:  59%|#####9    | 236/399 [00:05<00:02, 56.33it/s]Loading weights:  62%|######1   | 246/399 [00:05<00:02, 61.16it/s]Loading weights:  64%|######3   | 254/399 [00:05<00:02, 63.94it/s]Loading weights:  65%|######5   | 261/399 [00:05<00:02, 61.47it/s]Loading weights:  67%|######7   | 269/399 [00:05<00:02, 59.76it/s]Loading weights:  70%|######9   | 279/399 [00:05<00:01, 61.19it/s]Loading weights:  72%|#######1  | 286/399 [00:05<00:01, 61.43it/s]Loading weights:  73%|#######3  | 293/399 [00:05<00:01, 55.67it/s]Loading weights:  76%|#######5  | 302/399 [00:06<00:01, 58.97it/s]Loading weights:  78%|#######8  | 312/399 [00:06<00:01, 65.84it/s]Loading weights:  80%|########  | 320/399 [00:06<00:01, 67.57it/s]Loading weights:  82%|########1 | 327/399 [00:06<00:01, 63.94it/s]Loading weights:  84%|########3 | 335/399 [00:06<00:00, 66.23it/s]Loading weights:  86%|########6 | 345/399 [00:06<00:00, 70.19it/s]Loading weights:  88%|########8 | 353/399 [00:06<00:00, 70.73it/s]Loading weights:  90%|######### | 361/399 [00:06<00:00, 68.42it/s]Loading weights:  92%|#########2| 368/399 [00:07<00:00, 64.22it/s]Loading weights:  95%|#########4| 378/399 [00:07<00:00, 68.76it/s]Loading weights:  97%|#########6| 386/399 [00:07<00:00, 69.73it/s]Loading weights:  98%|#########8| 393/399 [00:07<00:00, 65.30it/s]Loading weights: 100%|##########| 399/399 [00:07<00:00, 53.39it/s]
+C:\Users\Scott\Projects\LLM-Based-Reinforcement-Learning-for-Chemo-Dosing\.venv\Lib\site-packages\DTRGym\ahn_chemo_env.py:44: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+  return float(reward)
+finished qwen-zeroshot-nohistory
+
+policy                                 return                died   tumor_final_ratio    normal_min_ratio          total_drug     aggressive_frac    mean_action_prob
+qwen-zeroshot-nohistory                102±65          0.46±0.098          0.857±0.17         0.764±0.013              51±8.5                 0±0         0.759±0.021
+
+saved to runs\eval-100patients
+=== 23:52:20 done
+ALL DONE Thu Nov 19 23:52:20 MST 2026

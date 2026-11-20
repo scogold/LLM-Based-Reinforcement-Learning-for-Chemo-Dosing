@@ -128,7 +128,8 @@ class DeathPenalty(gym.Wrapper):
 
 
 def make_env(cfg, seed, training=False):
-    """training=True adds the DeathPenalty reward; evaluation leaves the env's reward as it is."""
+    """training=True adds the DeathPenalty reward, unless env.death_penalty is 0 (train on the
+    env's own reward). Evaluation always leaves the env's reward as it is."""
     env_cfg = cfg["env"]
     assert env_cfg["history"] <= prompts.MAX_HISTORY, "the prompt can't show more earlier steps than MAX_HISTORY"
     env = gym.make(env_cfg["id"], max_t=env_cfg["max_t"])
@@ -136,7 +137,7 @@ def make_env(cfg, seed, training=False):
         env = ScalarDose(env)
     env = SeededResets(env, seed)
     env = ObservationHistory(env, env_cfg["history"] + 1)  # earlier steps + the current one
-    if training:
+    if training and env_cfg["death_penalty"]:
         env = DeathPenalty(env, env_cfg["death_penalty"])
     return gym.wrappers.RecordEpisodeStatistics(env)
 

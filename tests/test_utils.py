@@ -48,7 +48,8 @@ def test_load_config_sets_config_name(config_dir):
     assert load_config(config_dir / "mymodel.yaml")["config_name"] == "mymodel"
 
 
-@pytest.mark.parametrize("name", ["qwen3_8b", "medgemma_4b", "deepseek_r1_7b"])
+@pytest.mark.parametrize("name", ["qwen3_8b", "medgemma_4b", "deepseek_r1_7b",
+                                  "qwen3_8b_no_history"])
 def test_real_configs_have_what_the_code_reads(name):
     cfg = load_config(CONFIG_DIR / f"{name}.yaml")
     assert cfg["config_name"] == name
@@ -274,7 +275,67 @@ def test_make_env_training_flag_controls_death_penalty():
     assert train_return == pytest.approx(eval_return - 50.0, abs=1e-3)
 
 
+def test_make_env_zero_death_penalty_trains_on_the_env_reward():
+    cfg = {"env": {**REAL_CFG["env"], "death_penalty": 0}}
+
+    def run(training):
+        env = make_env(cfg, seed=0, training=training)
+        env.reset(seed=105)  # dies when never dosed
+        done, rewards = False, []
+        while not done:
+            _, r, terminated, truncated, info = env.step(0.0)
+            rewards.append(float(r))
+            done = terminated or truncated
+        return rewards, float(np.sum(info["episode"]["r"])), terminated
+
+    eval_rewards, eval_return, died = run(False)
+    train_rewards, train_return, train_died = run(True)
+    assert died and train_died
+    assert train_rewards == pytest.approx(eval_rewards)
+    assert train_return == pytest.approx(eval_return)
+
+
+def _flatten(d, prefix=""):
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            out.update(_flatten(v, f"{prefix}{k}."))
+        else:
+            out[f"{prefix}{k}"] = v
+    return out
+
+
+def test_env_reward_ablation_config_differs_from_qwen3_only_in_penalty_and_name():
+    base = _flatten(load_config(CONFIG_DIR / "qwen3_8b.yaml"))
+    abl = _flatten(load_config(CONFIG_DIR / "qwen3_8b_env_reward.yaml"))
+    differing = {k for k in base.keys() | abl.keys() if base.get(k, "<missing>") != abl.get(k, "<missing>")}
+    assert differing == {"config_name", "env.death_penalty"}
+    assert abl["env.death_penalty"] == 0
+    assert base["env.death_penalty"]
+
+
 def test_make_env_rejects_history_longer_than_the_prompt_can_show():
     cfg = {"env": {**REAL_CFG["env"], "history": prompts.MAX_HISTORY + 1}}
     with pytest.raises(AssertionError):
         make_env(cfg, seed=0)
+
+
+def test_no_history_config_differs_from_qwen3_only_in_history_and_name():
+    base = _flatten(load_config(CONFIG_DIR / "qwen3_8b.yaml"))
+    nh = _flatten(load_config(CONFIG_DIR / "qwen3_8b_no_history.yaml"))
+    differing = {k for k in base.keys() | nh.keys() if base.get(k, "<missing>") != nh.get(k, "<missing>")}
+    assert differing == {"config_name", "env.history"}
+    assert nh["env.history"] == 0
+
+
+def test_no_history_config_gives_single_row_obs_and_same_prompt_as_current_obs():
+    cfg = load_config(CONFIG_DIR / "qwen3_8b_no_history.yaml")
+    env = make_env(cfg, seed=0)
+    obs, _ = env.reset(seed=0)
+    assert obs.shape == (1, 3)
+    for _ in range(3):
+        obs, *_ = env.step(0.5)
+        assert obs.shape == (1, 3)
+        text = prompts.user_prompt(obs)
+        assert text == prompts.user_prompt(obs[-1])
+        assert "Earlier steps" not in text and "oldest shown" not in text

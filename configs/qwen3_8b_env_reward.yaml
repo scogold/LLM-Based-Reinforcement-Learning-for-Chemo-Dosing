@@ -1,0 +1,20 @@
+# Reward ablation for Qwen3 8B: identical to qwen3_8b.yaml (same model, history prompt, PPO
+# settings and everything else from base.yaml), except training uses AhnChemoEnv's own
+# reward with no DeathPenalty. Compare against a qwen3_8b.yaml run with the same --seed to
+# see what the death penalty changes.
+#
+#   python scripts/train.py configs/qwen3_8b_env_reward.yaml --seed 0
+#
+# Keep the model section identical to qwen3_8b.yaml.
+
+model:
+  name: Qwen/Qwen3-8B
+  load_in_4bit: true
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.0
+    target_modules: [q_proj, k_proj, v_proj, o_proj]
+
+env:
+  death_penalty: 0            # train on the env's own reward

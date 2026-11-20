@@ -2,11 +2,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-runs/*
-!runs/.gitkeep
-
-figures*/
-
-figures*/
-
-figures*/
+# Run results (config.yaml, TensorBoard events, logs, evaluation JSON) are committed for review.
+# Of the checkpoints, only adapter-final is committed (LoRA adapter + value head, what
+# evaluate.py loads): intermediate checkpoints add ~3.5 GB, and trainer.pt (optimizer state,
+# only for --resume) is over GitHub's 100 MB file limit.
+runs/**/adapter-*/
+!runs/*/adapter-final/
+runs/**/trainer.pt
+runs/debug-*/

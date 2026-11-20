@@ -1,0 +1,47 @@
+env:
+  id: AhnChemoEnv-continuous-setting2
+  max_t: 600
+  history: 6
+  death_penalty: 300
+doses:
+- 0.0
+- 0.25
+- 0.5
+- 0.75
+- 1.0
+ppo:
+  rollout_steps: 128
+  n_envs: 8
+  epochs: 2
+  target_kl: 0.05
+  minibatch_size: 16
+  micro_batch_size: 1
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  vf_coef: 0.5
+  ent_coef: 0.01
+  max_grad_norm: 1.0
+  reward_scale: 0.01
+  lr: 1.0e-05
+  value_head_lr: 0.0001
+train:
+  prompt_variant: expert
+  updates: 300
+  save_every: 20
+  value_warmup_updates: 5
+model:
+  name: Qwen/Qwen3-8B
+  load_in_4bit: true
+  lora:
+    r: 16
+    alpha: 32
+    dropout: 0.0
+    target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+config_name: qwen3_8b
+seed: 0
+git_commit: 21f710133ac93f449a5318e93e939f47bcdb3acc

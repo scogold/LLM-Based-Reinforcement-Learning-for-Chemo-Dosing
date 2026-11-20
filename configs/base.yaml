@@ -15,6 +15,7 @@ env:
                                         # step, ~210 discounted at gamma 0.99, so dying is always
                                         # worse. Constant, because the policy can't see the day.
                                         # Evaluation reports the env's own reward.
+                                        # 0 = train on the env's own reward (no penalty).
 
 # Dose sent to the env for each answer label A-E, in order.
 # Must equal prompts.DOSE_LEVELS, because the prompt tells the model these numbers.
