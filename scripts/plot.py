@@ -2,6 +2,9 @@
 
     python scripts/plot.py runs/eval-main/*.json --out runs/eval-main/plots
     python scripts/plot.py --runs runs/qwen3_8b-seed0-<time> --out runs/plots
+    python scripts/plot.py "runs/eval-main/max.json=Always full dose" --out figures
+
+Legend and axis labels are the file or folder names, unless a path is given as 'path=Label'.
 
 Each evaluation log file is one method (its name becomes the legend label). Files that are
 not episode logs, such as summary.json, are skipped. Figures:
@@ -34,16 +37,26 @@ HEADLINE = (("return", "cost = -return (lower is better)"),
             ("total_drug", "total drug given"))
 
 
+def split_label(arg, default):
+    """'path=Label' -> (Path(path), 'Label'); a plain path -> (Path(path), default(Path(path)))."""
+    path, sep, label = arg.rpartition("=")
+    if not sep:
+        return Path(arg), default(Path(arg))
+    return Path(path), label
+
+
 def load_logs(paths):
-    """{label: list of episode logs}, skipping files that are not episode logs."""
+    """{label: list of episode logs}, skipping files that are not episode logs. Each path may be
+    given as 'path=Label' to set its legend label; otherwise the file name is used."""
     methods = {}
-    for p in map(Path, paths):
+    for arg in paths:
+        p, label = split_label(arg, lambda p: p.stem)
         try:
             data = json.loads(p.read_text())
         except (OSError, json.JSONDecodeError):
             continue
         if isinstance(data, list) and data and isinstance(data[0], dict) and "steps" in data[0]:
-            methods[p.stem] = data
+            methods[label] = data
     return methods
 
 
@@ -70,9 +83,9 @@ def plot_trajectories(methods, out, seed=None):
             ax.set_ylabel(title)
     axes[-1].set_xlabel("day")
     axes[0].set_title(f"One patient (seed {seed})")
-    axes[0].legend(fontsize=8)
+    axes[0].legend(fontsize=8, loc="upper left", bbox_to_anchor=(1.01, 1))  # outside, off the data
     fig.tight_layout()
-    fig.savefig(out / "trajectories.png", dpi=150)
+    fig.savefig(out / "trajectories.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -89,7 +102,7 @@ def plot_metrics(methods, out):
         ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
         ax.set_title(title, fontsize=9)
     fig.tight_layout()
-    fig.savefig(out / "metrics.png", dpi=150)
+    fig.savefig(out / "metrics.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -104,27 +117,29 @@ def plot_doses(methods, out, n_levels=5):
     ax.set_xticklabels([chr(65 + i) for i in range(n_levels)])
     ax.set_xlabel("dose option (A = none ... E = maximum)")
     ax.set_ylabel("share of steps")
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=8, loc="upper left", bbox_to_anchor=(1.01, 1))  # outside, off the data
     fig.tight_layout()
-    fig.savefig(out / "doses.png", dpi=150)
+    fig.savefig(out / "doses.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
 def plot_learning_curve(run_dirs, out):
-    """Episode return (env units) against training env steps, one line per training run."""
+    """Episode return (env units) against training env steps, one line per training run.
+    Each directory may be given as 'dir=Label'; otherwise the folder name is used."""
     from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
     fig, ax = plt.subplots(figsize=(7, 3.6))
-    for run_dir in map(Path, run_dirs):
+    for arg in run_dirs:
+        run_dir, label = split_label(arg, lambda p: p.name)
         events = EventAccumulator(str(run_dir))  # reads every event file, so resumed runs too
         events.Reload()
         points = events.Scalars("episode/return")
-        ax.plot([p.step for p in points], [p.value for p in points], marker=".", label=run_dir.name)
+        ax.plot([p.step for p in points], [p.value for p in points], marker=".", label=label)
     ax.set_xlabel("training env steps")
     ax.set_ylabel("episode return")
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=8, loc="upper left", bbox_to_anchor=(1.01, 1))  # outside, off the data
     fig.tight_layout()
-    fig.savefig(out / "learning_curve.png", dpi=150)
+    fig.savefig(out / "learning_curve.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
